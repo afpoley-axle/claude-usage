@@ -84,7 +84,7 @@ select{font:inherit;padding:4px 8px;border-radius:6px;border:1px solid var(--lin
 <p class="sub" id="sub"></p>
 <div class="controls">
  <label>Week <select id="wk"></select></label>
- <span class="seg" role="group" aria-label="Measure"><button data-m="cost" aria-pressed="true">Est. cost</button><button data-m="tokens" aria-pressed="false">Tokens</button></span>
+ <span class="seg" role="group" aria-label="Measure"><button data-m="tokens" aria-pressed="true">Tokens</button><button data-m="cost" aria-pressed="false">Est. cost</button></span>
 </div>
 <div class="tiles" id="tiles"></div>
 <h3>Selected week</h3>
@@ -94,7 +94,7 @@ select{font:inherit;padding:4px 8px;border-radius:6px;border:1px solid var(--lin
 <div class="card"><h2 id="h2">By model</h2><p class="note" id="n2"></p><div id="c2"></div>
 <details><summary>Table</summary><div id="t2"></div></details></div>
 <h3>Every week</h3>
-<div class="card"><h2>Estimated cost per week</h2><p class="note" id="n0"></p>
+<div class="card"><h2 id="h0"></h2><p class="note" id="n0"></p>
 <div class="tiles" id="tiles0"></div><div id="c0"></div>
 <details><summary>Table</summary><div id="t0"></div></details></div>
 <div class="card"><h2 id="h3">Weekly total by project</h2><p class="note">Allowance weeks, Thursday 15:00 to Thursday 15:00 local. Projects beyond the top four are grouped as Other (hatched).</p>
@@ -108,7 +108,7 @@ select{font:inherit;padding:4px 8px;border-radius:6px;border:1px solid var(--lin
 <script>
 const D = __DATA__;
 const NS="http://www.w3.org/2000/svg", tip=document.getElementById("tip");
-let M="cost";
+let M="tokens";
 const fmtN=n=>n>=1e9?(n/1e9).toFixed(1)+"B":n>=1e6?(n/1e6).toFixed(1)+"M":n>=1e3?(n/1e3).toFixed(1)+"K":String(Math.round(n));
 const fmt$=n=>n>=1000?"$"+(n/1000).toFixed(1)+"K":n>=100?"$"+n.toFixed(0):"$"+n.toFixed(2);
 const tot=r=>r.input+r.output+r.cache_write+r.cache_read;
@@ -124,14 +124,14 @@ function el(t,a,p){const e=document.createElementNS(NS,t);for(const k in a)e.set
 function hover(e,html){e.classList.add("mark");e.addEventListener("mousemove",ev=>{tip.innerHTML=html;tip.style.display="block";
  const x=Math.min(ev.clientX+14,innerWidth-tip.offsetWidth-8);tip.style.left=x+"px";tip.style.top=(ev.clientY+14)+"px"});
  e.addEventListener("mouseleave",()=>tip.style.display="none")}
-const detail=r=>`${fmt$(r.cost)} est. · ${fmtN(tot(r))} tokens<br>${r.messages.toLocaleString()} msgs · ${fmtN(r.output)} output`;
+const detail=r=>`${M==="cost"?fmt$(r.cost)+" est. · ":""}${fmtN(tot(r))} tokens<br>${r.messages.toLocaleString()} msgs · ${fmtN(r.output)} output`;
 function legend(id,keys,col){document.getElementById(id).innerHTML=keys.map(k=>`<span><i style="background:${swatch(col(k))}"></i>${k}</span>`).join("")}
 function ticks(max,k=5){const s=Math.pow(10,Math.floor(Math.log10(max||1)));const st=[1,2,2.5,5,10].map(x=>x*s).find(x=>max/x<=k);
  const out=[];for(let v=0;v<=max+1e-9;v+=st)out.push(v);if(out[out.length-1]<max)out.push(out[out.length-1]+st);return out}
 function table(id,head,rows){document.getElementById(id).innerHTML="<table><tr>"+head.map(h=>`<th>${h}</th>`).join("")+"</tr>"+
  rows.map(r=>"<tr>"+r.map((c,i)=>`<td${i<2&&typeof c==="string"&&!/^[$\\d]/.test(c)?' class="l"':""}>${c}</td>`).join("")+"</tr>").join("")+"</table>"}
-const cells=r=>[r.messages.toLocaleString(),fmtN(r.input),fmtN(r.output),fmtN(r.cache_write),fmtN(r.cache_read),fmtN(tot(r)),fmt$(r.cost)];
-const HEAD=["Messages","Input","Output","Cache write","Cache read","Total tokens","Est. cost"];
+const cells=r=>[r.messages.toLocaleString(),fmtN(r.input),fmtN(r.output),fmtN(r.cache_write),fmtN(r.cache_read),fmtN(tot(r))].concat(M==="cost"?[fmt$(r.cost)]:[]);
+const HEADS=["Messages","Input","Output","Cache write","Cache read","Total tokens"];let HEAD=HEADS;
 // Horizontal stacked bars: rows=[{name, parts:[{key,r}]}]
 function hbars(id,rows,col){const host=document.getElementById(id);host.innerHTML="";
  const W=Math.max(host.clientWidth,300),L=Math.min(250,W*.36),R=70,bh=24,gap=14,T=6,H=T+rows.length*(bh+gap)+22;
@@ -162,30 +162,31 @@ function columns(id,keys,col,parts){const host=document.getElementById(id);host.
   if(i%Math.ceil(n/Math.floor(W/80))===0||i===n-1)el("text",{x:cx,y:H-B+16,"text-anchor":"middle"},s).textContent=w.week.slice(5)})}
 function byProject(w){const o={};for(const[p,ms]of Object.entries(w.projects)){const k=pkey(p);o[k]=add(o[k]||sum([]),sum(Object.values(ms)))}return o}
 function perWeek(){const host=document.getElementById("c0");host.innerHTML="";
- const wks=D.weeks.slice().reverse(),costs=wks.map(w=>sum(Object.values(w.models)).cost),n=wks.length;
- const done=D.weeks.filter(w=>!w.current).map(w=>sum(Object.values(w.models)).cost),avg=done.reduce((a,b)=>a+b,0)/(done.length||1);
+ const wks=D.weeks.slice().reverse(),costs=wks.map(w=>val(sum(Object.values(w.models)))),n=wks.length;
+ const done=D.weeks.filter(w=>!w.current).map(w=>val(sum(Object.values(w.models)))),avg=done.reduce((a,b)=>a+b,0)/(done.length||1);
  const cur=D.weeks.find(w=>w.current),last=D.weeks.find(w=>!w.current);
- document.getElementById("n0").textContent=`API list-price equivalent per allowance week. The dashed line is the average of ${done.length} completed weeks.`;
- document.getElementById("tiles0").innerHTML=[["This week so far",cur?fmt$(sum(Object.values(cur.models)).cost):"–"],
-  [`Last week (${last?last.week.slice(5):"–"})`,last?fmt$(sum(Object.values(last.models)).cost):"–"],["Average per week",fmt$(avg)],
-  ["Highest week",fmt$(Math.max(...done,0))]].map(([k,v])=>`<div class="tile"><span>${k}</span><b>${v}</b></div>`).join("");
+ document.getElementById("n0").textContent=`${M==="cost"?"API list-price equivalent":"Total tokens"} per allowance week. The dashed line is the average of ${done.length} completed weeks.`;
+ document.getElementById("tiles0").innerHTML=[["This week so far",cur?fv(val(sum(Object.values(cur.models)))):"–"],
+  [`Last week (${last?last.week.slice(5):"–"})`,last?fv(val(sum(Object.values(last.models)))):"–"],["Average per week",fv(avg)],
+  ["Highest week",fv(Math.max(...done,0))]].map(([k,v])=>`<div class="tile"><span>${k}</span><b>${v}</b></div>`).join("");
  const W=Math.max(host.clientWidth,300),L=62,T=18,B=40,H=260,bw=Math.min(46,(W-L-10)/n-6);
  const tk=ticks(Math.max(...costs,1e-9)),Y=v=>H-B-(H-B-T)*v/tk[tk.length-1];
  const s=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img"},host);hatch(s);
- tk.forEach(v=>{el("line",{x1:L,x2:W,y1:Y(v),y2:Y(v),stroke:"var(--grid)"},s);el("text",{x:L-6,y:Y(v)+4,"text-anchor":"end"},s).textContent=fmt$(v)});
+ tk.forEach(v=>{el("line",{x1:L,x2:W,y1:Y(v),y2:Y(v),stroke:"var(--grid)"},s);el("text",{x:L-6,y:Y(v)+4,"text-anchor":"end"},s).textContent=fv(v)});
  const showAll=bw>=34;
  wks.forEach((w,i)=>{const c=costs[i],cx=L+(i+.5)*(W-L)/n,x=cx-bw/2,y=Y(c),h=Y(0)-y;
   const bar=el("path",{d:h>4?`M${x},${Y(0)}V${y+4}q0,-4 4,-4h${bw-8}q4,0 4,4V${Y(0)}Z`:`M${x},${Y(0)}v${-Math.max(h,.5)}h${bw}v${Math.max(h,.5)}Z`,
    fill:"var(--accent)",opacity:w.current?.55:1},s);
   hover(bar,`<b>Week of ${w.week}${w.current?" (in progress)":""}</b>${detail(sum(Object.values(w.models)))}`);
-  if(showAll||c===Math.max(...costs)||w.current)el("text",{x:cx,y:y-5,"text-anchor":"middle",style:"fill:var(--ink)"},s).textContent=fmt$(c);
+  if(showAll||c===Math.max(...costs)||w.current)el("text",{x:cx,y:y-5,"text-anchor":"middle",style:"fill:var(--ink)"},s).textContent=fv(c);
   if(i%Math.ceil(n/Math.floor(W/80))===0||i===n-1)el("text",{x:cx,y:H-B+16,"text-anchor":"middle"},s).textContent=w.week.slice(5)});
  if(done.length){el("line",{x1:L,x2:W,y1:Y(avg),y2:Y(avg),stroke:"var(--ink2)","stroke-dasharray":"4 4"},s);
-  el("text",{x:L+4,y:Y(avg)-5,"text-anchor":"start",style:"fill:var(--ink2)"},s).textContent=`avg ${fmt$(avg)}`}
- table("t0",["Week of","Messages","Total tokens","Est. cost"],D.weeks.map(w=>{const r=sum(Object.values(w.models));
-  return[w.week+(w.current?" (in progress)":""),r.messages.toLocaleString(),fmtN(tot(r)),fmt$(r.cost)]}))}
+  el("text",{x:L+4,y:Y(avg)-5,"text-anchor":"start",style:"fill:var(--ink2)"},s).textContent=`avg ${fv(avg)}`}
+ document.getElementById("h0").textContent=M==="cost"?"Estimated cost per week":"Tokens per week";
+ table("t0",["Week of","Messages","Total tokens"].concat(M==="cost"?["Est. cost"]:[]),D.weeks.map(w=>{const r=sum(Object.values(w.models));
+  return[w.week+(w.current?" (in progress)":""),r.messages.toLocaleString(),fmtN(tot(r))].concat(M==="cost"?[fmt$(r.cost)]:[])}))}
 function history(){
- perWeek();
+ HEAD=HEADS.concat(M==="cost"?["Est. cost"]:[]);perWeek();
  columns("c3",D.projects,colP,byProject);columns("c4",D.models,colM,w=>w.models);
  document.getElementById("h3").textContent=`Weekly ${M==="cost"?"estimated cost":"total tokens"} by project`;
  document.getElementById("h4").textContent=`Weekly ${M==="cost"?"estimated cost":"total tokens"} by model`;
@@ -194,8 +195,8 @@ function history(){
  table("t4",["Week of","Model"].concat(HEAD),D.weeks.flatMap(w=>D.models.filter(m=>w.models[m]).map(m=>[w.week,m].concat(cells(w.models[m])))))}
 function render(){const wk=document.getElementById("wk").value,w=D.weeks.find(x=>x.week===wk);
  const all=sum(Object.values(w.models));
- document.getElementById("tiles").innerHTML=[["Estimated cost",fmt$(all.cost)],["Total tokens",fmtN(tot(all))],["Output tokens",fmtN(all.output)],
-  ["Messages",all.messages.toLocaleString()],["Projects",Object.keys(w.projects).length]].map(([k,v])=>`<div class="tile"><span>${k}</span><b>${v}</b></div>`).join("");
+ document.getElementById("tiles").innerHTML=(M==="cost"?[["Estimated cost",fmt$(all.cost)]]:[]).concat([["Total tokens",fmtN(tot(all))],["Output tokens",fmtN(all.output)],
+  ["Messages",all.messages.toLocaleString()],["Projects",Object.keys(w.projects).length]]).map(([k,v])=>`<div class="tile"><span>${k}</span><b>${v}</b></div>`).join("");
  const projs=Object.entries(w.projects).map(([name,ms])=>({name,ms,t:sum(Object.values(ms))})).sort((a,b)=>val(b.t)-val(a.t));
  document.getElementById("h1").textContent=`${M==="cost"?"Estimated cost":"Tokens"} by project, split by model`;
  document.getElementById("h2").textContent=`${M==="cost"?"Estimated cost":"Tokens"} by model`;
@@ -208,13 +209,14 @@ function render(){const wk=document.getElementById("wk").value,w=D.weeks.find(x=
  hbars("c2",ms.map(m=>({name:m,parts:[{key:m,r:w.models[m]}]})),colM);
  table("t2",["Model"].concat(HEAD),ms.map(m=>[m].concat(cells(w.models[m]))))}
 document.getElementById("sub").textContent=`Generated ${D.generated}. Weeks start Thursday 15:00 local, matching the allowance reset.`;
-document.getElementById("foot").textContent="Estimated cost uses Anthropic API list prices per million tokens: input, output, cache reads, and cache writes at 1.25x input (5-minute) or 2x input (1-hour). It shows what this usage would cost on the API, not your plan's charges."
+const FOOT="Estimated cost uses Anthropic API list prices per million tokens: input, output, cache reads, and cache writes at 1.25x input (5-minute) or 2x input (1-hour). It shows what this usage would cost on the API, not your plan's charges."
  +(D.unpriced.length?` No price on file for: ${D.unpriced.join(", ")} (counted as $0).`:"");
+const foot=()=>document.getElementById("foot").textContent=M==="cost"?FOOT:"";
 const sel=document.getElementById("wk");sel.innerHTML=D.weeks.map(w=>`<option value="${w.week}">Week of ${w.week}${w.current?" (current)":""}</option>`).join("");
 sel.onchange=render;legend("lg3",D.projects,colP);legend("lg4",D.models,colM);
 document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{M=b.dataset.m;
- document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",x===b));history();render()});
-history();render();
+ document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",x===b));history();render();foot()});
+history();render();foot();
 let rz;addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>{history();render()},150)});
 </script></body></html>
 """
