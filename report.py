@@ -94,6 +94,9 @@ select{font:inherit;padding:4px 8px;border-radius:6px;border:1px solid var(--lin
 <div class="card"><h2 id="h2">By model</h2><p class="note" id="n2"></p><div id="c2"></div>
 <details><summary>Table</summary><div id="t2"></div></details></div>
 <h3>Every week</h3>
+<div class="card"><h2>Estimated cost per week</h2><p class="note" id="n0"></p>
+<div class="tiles" id="tiles0"></div><div id="c0"></div>
+<details><summary>Table</summary><div id="t0"></div></details></div>
 <div class="card"><h2 id="h3">Weekly total by project</h2><p class="note">Allowance weeks, Thursday 15:00 to Thursday 15:00 local. Projects beyond the top seven are grouped as Other.</p>
 <div class="legend" id="lg3"></div><div id="c3"></div>
 <details><summary>Table</summary><div id="t3"></div></details></div>
@@ -155,7 +158,31 @@ function columns(id,keys,col,parts){const host=document.getElementById(id);host.
    hover(rect,`<b>Week of ${w.week}</b>${k}<br>${detail(r)}`);base+=v});
   if(i%Math.ceil(n/Math.floor(W/70))===0||i===n-1)el("text",{x:cx,y:H-B+16,"text-anchor":"middle"},s).textContent=w.week.slice(5)})}
 function byProject(w){const o={};for(const[p,ms]of Object.entries(w.projects)){const k=pkey(p);o[k]=add(o[k]||sum([]),sum(Object.values(ms)))}return o}
+function perWeek(){const host=document.getElementById("c0");host.innerHTML="";
+ const wks=D.weeks.slice().reverse(),costs=wks.map(w=>sum(Object.values(w.models)).cost),n=wks.length;
+ const done=D.weeks.filter(w=>!w.current).map(w=>sum(Object.values(w.models)).cost),avg=done.reduce((a,b)=>a+b,0)/(done.length||1);
+ const cur=D.weeks.find(w=>w.current),last=D.weeks.find(w=>!w.current);
+ document.getElementById("n0").textContent=`API list-price equivalent per allowance week. The dashed line is the average of ${done.length} completed weeks.`;
+ document.getElementById("tiles0").innerHTML=[["This week so far",cur?fmt$(sum(Object.values(cur.models)).cost):"–"],
+  [`Last week (${last?last.week.slice(5):"–"})`,last?fmt$(sum(Object.values(last.models)).cost):"–"],["Average per week",fmt$(avg)],
+  ["Highest week",fmt$(Math.max(...done,0))]].map(([k,v])=>`<div class="tile"><span>${k}</span><b>${v}</b></div>`).join("");
+ const W=Math.max(host.clientWidth,300),L=54,T=18,B=40,H=260,bw=Math.min(46,(W-L-10)/n-6);
+ const tk=ticks(Math.max(...costs,1e-9)),Y=v=>H-B-(H-B-T)*v/tk[tk.length-1];
+ const s=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img"},host);
+ tk.forEach(v=>{el("line",{x1:L,x2:W,y1:Y(v),y2:Y(v),stroke:"var(--grid)"},s);el("text",{x:L-6,y:Y(v)+4,"text-anchor":"end"},s).textContent=fmt$(v)});
+ const showAll=bw>=34;
+ wks.forEach((w,i)=>{const c=costs[i],cx=L+(i+.5)*(W-L)/n,x=cx-bw/2,y=Y(c),h=Y(0)-y;
+  const bar=el("path",{d:h>4?`M${x},${Y(0)}V${y+4}q0,-4 4,-4h${bw-8}q4,0 4,4V${Y(0)}Z`:`M${x},${Y(0)}v${-Math.max(h,.5)}h${bw}v${Math.max(h,.5)}Z`,
+   fill:"var(--s1)",opacity:w.current?.55:1},s);
+  hover(bar,`<b>Week of ${w.week}${w.current?" (in progress)":""}</b>${detail(sum(Object.values(w.models)))}`);
+  if(showAll||c===Math.max(...costs)||w.current)el("text",{x:cx,y:y-5,"text-anchor":"middle",style:"fill:var(--ink)"},s).textContent=fmt$(c);
+  if(i%Math.ceil(n/Math.floor(W/70))===0||i===n-1)el("text",{x:cx,y:H-B+16,"text-anchor":"middle"},s).textContent=w.week.slice(5)});
+ if(done.length){el("line",{x1:L,x2:W,y1:Y(avg),y2:Y(avg),stroke:"var(--ink2)","stroke-dasharray":"4 4"},s);
+  el("text",{x:L+4,y:Y(avg)-5,"text-anchor":"start",style:"fill:var(--ink2)"},s).textContent=`avg ${fmt$(avg)}`}
+ table("t0",["Week of","Messages","Total tokens","Est. cost"],D.weeks.map(w=>{const r=sum(Object.values(w.models));
+  return[w.week+(w.current?" (in progress)":""),r.messages.toLocaleString(),fmtN(tot(r)),fmt$(r.cost)]}))}
 function history(){
+ perWeek();
  columns("c3",D.projects,colP,byProject);columns("c4",D.models,colM,w=>w.models);
  document.getElementById("h3").textContent=`Weekly ${M==="cost"?"estimated cost":"total tokens"} by project`;
  document.getElementById("h4").textContent=`Weekly ${M==="cost"?"estimated cost":"total tokens"} by model`;
