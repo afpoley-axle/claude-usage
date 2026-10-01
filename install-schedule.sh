@@ -1,5 +1,5 @@
 #!/bin/zsh
-# Install a launchd agent that runs update.sh every Thursday at 15:05, just after the allowance reset.
+# Install a launchd agent that runs update.sh every Thursday at 14:55, just before the allowance reset.
 # Uninstall: launchctl bootout gui/$(id -u)/com.claude-usage.weekly && rm ~/Library/LaunchAgents/com.claude-usage.weekly.plist
 set -euo pipefail
 DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -15,7 +15,7 @@ cat > "$PLIST" <<PLIST
   <key>ProgramArguments</key>
   <array><string>/bin/zsh</string><string>-l</string><string>$DIR/update.sh</string></array>
   <key>StartCalendarInterval</key>
-  <dict><key>Weekday</key><integer>4</integer><key>Hour</key><integer>15</integer><key>Minute</key><integer>5</integer></dict>
+  <dict><key>Weekday</key><integer>4</integer><key>Hour</key><integer>14</integer><key>Minute</key><integer>55</integer></dict>
   <key>StandardOutPath</key><string>$DIR/logs/update.log</string>
   <key>StandardErrorPath</key><string>$DIR/logs/update.log</string>
 </dict>
@@ -23,4 +23,4 @@ cat > "$PLIST" <<PLIST
 PLIST
 launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
 launchctl bootstrap "gui/$(id -u)" "$PLIST"
-echo "Installed $PLIST (runs Thursdays 15:05; missed runs fire on next wake)."
+echo "Installed $PLIST (runs Thursdays 14:55; missed runs fire on next wake)."

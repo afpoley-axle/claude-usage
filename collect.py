@@ -20,11 +20,14 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from pathlib import Path
 
+from report import write_report
+
 ROOT = Path(__file__).resolve().parent
 DATA = ROOT / "data"
 DAILY_CSV = DATA / "daily.csv"
 WEEKLY_CSV = DATA / "weekly.csv"
 REPORT_MD = ROOT / "WEEKLY.md"
+REPORT_HTML = ROOT / "report.html"
 PROJECTS_DIR = Path(os.environ.get("CLAUDE_CONFIG_DIR", Path.home() / ".claude")) / "projects"
 
 METRICS = ["messages", "input", "output", "cache_write", "cache_read"]
@@ -169,7 +172,8 @@ def main():
     write_csv(DAILY_CSV, KEY + METRICS,
               [list(k) + [v[m] for m in METRICS] for k, v in sorted(daily.items())])
     build_report(daily)
-    print(f"{len(daily)} daily rows -> {DAILY_CSV.relative_to(ROOT)}, {REPORT_MD.name}")
+    write_report(daily, REPORT_HTML, week_start(datetime.now().astimezone()))
+    print(f"{len(daily)} daily rows -> {DAILY_CSV.relative_to(ROOT)}, {REPORT_MD.name}, {REPORT_HTML.name}")
 
 
 if __name__ == "__main__":

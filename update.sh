@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 /usr/bin/env python3 collect.py
-git add data WEEKLY.md
+git add data WEEKLY.md report.html
 if git diff --cached --quiet; then
   echo "No usage changes."
   exit 0
