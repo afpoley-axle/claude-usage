@@ -5,7 +5,7 @@ from collections import defaultdict
 from datetime import datetime
 
 METRICS = ["messages", "input", "output", "cache_write", "cache_write_1h", "cache_read"]
-MAX_SERIES = 7  # categorical slots; the rest fold into "Other"
+MAX_SERIES = 4  # models and projects each get 4 hues, disjoint so colors never imply a link; the rest fold into "Other"
 
 # Anthropic API list prices, $ per million tokens: (input, output, cache read).
 # Cache writes bill at 1.25x input (5-minute TTL) or 2x input (1-hour TTL).
@@ -52,33 +52,33 @@ PAGE = """<!doctype html>
 <title>Claude Usage Report</title>
 <style>
 :root{--bg:#fcfcfb;--card:#fff;--ink:#0b0b0b;--ink2:#52514e;--muted:#8a8984;--grid:#e8e7e3;--line:#dddcd7;--accent:#2a78d6;
---s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300;--s7:#4a3aa7;--s8:#a8a7a2}
+--m1:#2a78d6;--m2:#eda100;--m3:#e87ba4;--m4:#008300;--mo:#a8a7a2;--p1:#eb6834;--p2:#1baf7a;--p3:#4a3aa7;--p4:#e34948;--po:#a8a7a2}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1a1a19;--card:#222220;--ink:#fff;--ink2:#c3c2b7;--accent:#3987e5;
---muted:#8f8e88;--grid:#33332f;--line:#3a3a36;--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#008300;--s7:#9085e9;--s8:#6b6a66}}
+--muted:#8f8e88;--grid:#33332f;--line:#3a3a36;--m1:#3987e5;--m2:#c98500;--m3:#d55181;--m4:#008300;--mo:#6b6a66;--p1:#d95926;--p2:#199e70;--p3:#9085e9;--p4:#e66767;--po:#6b6a66}}
 :root[data-theme="dark"]{--bg:#1a1a19;--card:#222220;--ink:#fff;--ink2:#c3c2b7;--muted:#8f8e88;--grid:#33332f;--line:#3a3a36;--accent:#3987e5;
---s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#008300;--s7:#9085e9;--s8:#6b6a66}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-main{max-width:1040px;margin:0 auto;padding:28px 16px 48px}h1{font-size:22px;margin:0 0 4px}h2{font-size:15px;margin:0 0 2px}
-h3{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:26px 0 10px}
-.sub{color:var(--ink2);margin:0 0 20px}.note{color:var(--muted);font-size:12px;margin:0 0 12px}
+--m1:#3987e5;--m2:#c98500;--m3:#d55181;--m4:#008300;--mo:#6b6a66;--p1:#d95926;--p2:#199e70;--p3:#9085e9;--p4:#e66767;--po:#6b6a66}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{max-width:1040px;margin:0 auto;padding:28px 16px 48px}h1{font-size:28px;margin:0 0 4px}h2{font-size:18px;margin:0 0 2px}
+h3{font-size:14px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:26px 0 10px}
+.sub{color:var(--ink2);margin:0 0 20px}.note{color:var(--muted);font-size:14px;margin:0 0 12px}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
 .tile,.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
-.tile b{display:block;font-size:24px;font-variant-numeric:tabular-nums}.tile span{color:var(--ink2);font-size:12px}
-.card{margin-bottom:16px}.legend{display:flex;flex-wrap:wrap;gap:4px 14px;margin:6px 0 10px;font-size:12px;color:var(--ink2)}
-.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
-svg{display:block;width:100%;height:auto;overflow:visible}svg text{fill:var(--ink2);font-size:11px}
+.tile b{display:block;font-size:30px;font-variant-numeric:tabular-nums}.tile span{color:var(--ink2);font-size:14px}
+.card{margin-bottom:16px}.legend{display:flex;flex-wrap:wrap;gap:4px 14px;margin:6px 0 12px;font-size:14px;color:var(--ink2)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+svg{display:block;width:100%;height:auto;overflow:visible}svg text{fill:var(--ink2);font-size:13px}
 .mark{cursor:default}.mark:hover{opacity:.8}
 #tip{position:fixed;pointer-events:none;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px;
-font-size:12px;box-shadow:0 4px 14px rgba(0,0,0,.12);display:none;z-index:9;max-width:260px}#tip b{display:block;margin-bottom:2px}
-table{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+font-size:14px;box-shadow:0 4px 14px rgba(0,0,0,.12);display:none;z-index:9;max-width:260px}#tip b{display:block;margin-bottom:2px}
+table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
 th,td{padding:5px 8px;border-bottom:1px solid var(--grid);text-align:right}th:first-child,td:first-child,.l{text-align:left}
-th{color:var(--ink2);font-weight:600}details{margin-top:10px}summary{cursor:pointer;color:var(--ink2);font-size:12px}
+th{color:var(--ink2);font-weight:600}details{margin-top:10px}summary{cursor:pointer;color:var(--ink2);font-size:14px}
 .controls{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
 select{font:inherit;padding:4px 8px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
-.seg button{font:inherit;font-size:13px;border:0;background:var(--card);color:var(--ink2);padding:4px 12px;cursor:pointer}
+.seg button{font:inherit;font-size:15px;border:0;background:var(--card);color:var(--ink2);padding:4px 12px;cursor:pointer}
 .seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
-.foot{color:var(--muted);font-size:12px;margin-top:24px}
+.foot{color:var(--muted);font-size:14px;margin-top:24px}
 </style></head><body><main>
 <h1>Claude Code usage</h1>
 <p class="sub" id="sub"></p>
@@ -97,10 +97,10 @@ select{font:inherit;padding:4px 8px;border-radius:6px;border:1px solid var(--lin
 <div class="card"><h2>Estimated cost per week</h2><p class="note" id="n0"></p>
 <div class="tiles" id="tiles0"></div><div id="c0"></div>
 <details><summary>Table</summary><div id="t0"></div></details></div>
-<div class="card"><h2 id="h3">Weekly total by project</h2><p class="note">Allowance weeks, Thursday 15:00 to Thursday 15:00 local. Projects beyond the top seven are grouped as Other.</p>
+<div class="card"><h2 id="h3">Weekly total by project</h2><p class="note">Allowance weeks, Thursday 15:00 to Thursday 15:00 local. Projects beyond the top four are grouped as Other (hatched).</p>
 <div class="legend" id="lg3"></div><div id="c3"></div>
 <details><summary>Table</summary><div id="t3"></div></details></div>
-<div class="card"><h2 id="h4">Weekly total by model</h2><p class="note">Allowance weeks, Thursday 15:00 to Thursday 15:00 local.</p>
+<div class="card"><h2 id="h4">Weekly total by model</h2><p class="note">Allowance weeks, Thursday 15:00 to Thursday 15:00 local. Models beyond the top four are grouped as Other.</p>
 <div class="legend" id="lg4"></div><div id="c4"></div>
 <details><summary>Table</summary><div id="t4"></div></details></div>
 <p class="foot" id="foot"></p>
@@ -115,14 +115,17 @@ const tot=r=>r.input+r.output+r.cache_write+r.cache_read;
 const val=r=>M==="cost"?r.cost:tot(r), fv=v=>M==="cost"?fmt$(v):fmtN(v), unit=()=>M==="cost"?"estimated cost":"total tokens";
 const add=(a,r)=>{for(const k in r)a[k]=(a[k]||0)+r[k];return a};
 const sum=rs=>rs.reduce(add,{messages:0,input:0,output:0,cache_write:0,cache_write_1h:0,cache_read:0,cost:0});
-const colM=m=>`var(--s${D.models.indexOf(m)+1})`, colP=p=>`var(--s${D.projects.indexOf(p)+1})`;
+const colM=m=>m==="Other"?"var(--mo)":`var(--m${D.models.indexOf(m)+1})`, colP=p=>p==="Other"?"url(#hatch)":`var(--p${D.projects.indexOf(p)+1})`;
+const swatch=c=>c==="url(#hatch)"?"repeating-linear-gradient(45deg,var(--po) 0 2px,transparent 2px 4px)":c;
 const pkey=p=>D.projects.includes(p)?p:"Other";
+function hatch(s){const p=el("pattern",{id:"hatch",width:5,height:5,patternUnits:"userSpaceOnUse",patternTransform:"rotate(45)"},el("defs",{},s));
+ el("rect",{width:5,height:5,fill:"var(--card)"},p);el("rect",{width:2.5,height:5,fill:"var(--po)"},p)}
 function el(t,a,p){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);p&&p.appendChild(e);return e}
 function hover(e,html){e.classList.add("mark");e.addEventListener("mousemove",ev=>{tip.innerHTML=html;tip.style.display="block";
  const x=Math.min(ev.clientX+14,innerWidth-tip.offsetWidth-8);tip.style.left=x+"px";tip.style.top=(ev.clientY+14)+"px"});
  e.addEventListener("mouseleave",()=>tip.style.display="none")}
 const detail=r=>`${fmt$(r.cost)} est. · ${fmtN(tot(r))} tokens<br>${r.messages.toLocaleString()} msgs · ${fmtN(r.output)} output`;
-function legend(id,keys,col){document.getElementById(id).innerHTML=keys.map(k=>`<span><i style="background:${col(k)}"></i>${k}</span>`).join("")}
+function legend(id,keys,col){document.getElementById(id).innerHTML=keys.map(k=>`<span><i style="background:${swatch(col(k))}"></i>${k}</span>`).join("")}
 function ticks(max,k=5){const s=Math.pow(10,Math.floor(Math.log10(max||1)));const st=[1,2,2.5,5,10].map(x=>x*s).find(x=>max/x<=k);
  const out=[];for(let v=0;v<=max+1e-9;v+=st)out.push(v);if(out[out.length-1]<max)out.push(out[out.length-1]+st);return out}
 function table(id,head,rows){document.getElementById(id).innerHTML="<table><tr>"+head.map(h=>`<th>${h}</th>`).join("")+"</tr>"+
@@ -131,11 +134,11 @@ const cells=r=>[r.messages.toLocaleString(),fmtN(r.input),fmtN(r.output),fmtN(r.
 const HEAD=["Messages","Input","Output","Cache write","Cache read","Total tokens","Est. cost"];
 // Horizontal stacked bars: rows=[{name, parts:[{key,r}]}]
 function hbars(id,rows,col){const host=document.getElementById(id);host.innerHTML="";
- const W=Math.max(host.clientWidth,300),L=Math.min(210,W*.34),R=56,bh=20,gap=12,T=6,H=T+rows.length*(bh+gap)+22;
- const max=Math.max(...rows.map(r=>r.parts.reduce((a,p)=>a+val(p.r),0)),1e-9),tk=ticks(max,Math.max(2,Math.floor((W-L-R)/80))),X=v=>L+(W-L-R)*v/tk[tk.length-1];
+ const W=Math.max(host.clientWidth,300),L=Math.min(250,W*.36),R=70,bh=24,gap=14,T=6,H=T+rows.length*(bh+gap)+22;
+ const max=Math.max(...rows.map(r=>r.parts.reduce((a,p)=>a+val(p.r),0)),1e-9),tk=ticks(max,Math.max(2,Math.floor((W-L-R)/95))),X=v=>L+(W-L-R)*v/tk[tk.length-1];
  const s=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img"},host);
  tk.forEach(v=>{el("line",{x1:X(v),x2:X(v),y1:T,y2:H-20,stroke:"var(--grid)"},s);el("text",{x:X(v),y:H-6,"text-anchor":"middle"},s).textContent=fv(v)});
- rows.forEach((r,i)=>{const y=T+i*(bh+gap);let x=L,acc=0;const nc=Math.floor(L/6.6);
+ rows.forEach((r,i)=>{const y=T+i*(bh+gap);let x=L,acc=0;const nc=Math.floor(L/8);
   el("text",{x:L-8,y:y+bh/2+4,"text-anchor":"end",style:"fill:var(--ink)"},s).textContent=r.name.length>nc?r.name.slice(0,nc-1)+"…":r.name;
   const parts=r.parts.filter(p=>val(p.r)>0);
   parts.forEach((p,j)=>{const w=X(val(p.r))-L,last=j===parts.length-1;
@@ -145,10 +148,10 @@ function hbars(id,rows,col){const host=document.getElementById(id);host.innerHTM
   el("text",{x:x+6,y:y+bh/2+4,style:"fill:var(--ink)"},s).textContent=fv(acc)})}
 // Stacked columns per week: parts(w) -> {key: r}
 function columns(id,keys,col,parts){const host=document.getElementById(id);host.innerHTML="";
- const W=Math.max(host.clientWidth,300),L=54,T=10,B=40,H=300,wks=D.weeks.slice().reverse(),n=wks.length,bw=Math.min(46,(W-L-10)/n-6);
+ const W=Math.max(host.clientWidth,300),L=62,T=10,B=40,H=300,wks=D.weeks.slice().reverse(),n=wks.length,bw=Math.min(46,(W-L-10)/n-6);
  const P=wks.map(parts),max=Math.max(...P.map(p=>Object.values(p).reduce((a,r)=>a+val(r),0)),1e-9);
  const tk=ticks(max),Y=v=>H-B-(H-B-T)*v/tk[tk.length-1];
- const s=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img"},host);
+ const s=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img"},host);hatch(s);
  tk.forEach(v=>{el("line",{x1:L,x2:W,y1:Y(v),y2:Y(v),stroke:"var(--grid)"},s);el("text",{x:L-6,y:Y(v)+4,"text-anchor":"end"},s).textContent=fv(v)});
  wks.forEach((w,i)=>{const cx=L+(i+.5)*(W-L)/n,x=cx-bw/2;let base=0;
   const ps=keys.map(k=>[k,P[i][k]]).filter(p=>p[1]&&val(p[1])>0);
@@ -156,7 +159,7 @@ function columns(id,keys,col,parts){const host=document.getElementById(id);host.
    const rect=el(last&&h>4?"path":"rect",last&&h>4?{d:`M${x},${y0-(j?2:0)}V${y1+4}q0,-4 4,-4h${bw-8}q4,0 4,4V${y0-(j?2:0)}Z`,fill:col(k)}:
     {x,y:y1,width:bw,height:h,fill:col(k)},s);
    hover(rect,`<b>Week of ${w.week}</b>${k}<br>${detail(r)}`);base+=v});
-  if(i%Math.ceil(n/Math.floor(W/70))===0||i===n-1)el("text",{x:cx,y:H-B+16,"text-anchor":"middle"},s).textContent=w.week.slice(5)})}
+  if(i%Math.ceil(n/Math.floor(W/80))===0||i===n-1)el("text",{x:cx,y:H-B+16,"text-anchor":"middle"},s).textContent=w.week.slice(5)})}
 function byProject(w){const o={};for(const[p,ms]of Object.entries(w.projects)){const k=pkey(p);o[k]=add(o[k]||sum([]),sum(Object.values(ms)))}return o}
 function perWeek(){const host=document.getElementById("c0");host.innerHTML="";
  const wks=D.weeks.slice().reverse(),costs=wks.map(w=>sum(Object.values(w.models)).cost),n=wks.length;
@@ -166,17 +169,17 @@ function perWeek(){const host=document.getElementById("c0");host.innerHTML="";
  document.getElementById("tiles0").innerHTML=[["This week so far",cur?fmt$(sum(Object.values(cur.models)).cost):"–"],
   [`Last week (${last?last.week.slice(5):"–"})`,last?fmt$(sum(Object.values(last.models)).cost):"–"],["Average per week",fmt$(avg)],
   ["Highest week",fmt$(Math.max(...done,0))]].map(([k,v])=>`<div class="tile"><span>${k}</span><b>${v}</b></div>`).join("");
- const W=Math.max(host.clientWidth,300),L=54,T=18,B=40,H=260,bw=Math.min(46,(W-L-10)/n-6);
+ const W=Math.max(host.clientWidth,300),L=62,T=18,B=40,H=260,bw=Math.min(46,(W-L-10)/n-6);
  const tk=ticks(Math.max(...costs,1e-9)),Y=v=>H-B-(H-B-T)*v/tk[tk.length-1];
- const s=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img"},host);
+ const s=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img"},host);hatch(s);
  tk.forEach(v=>{el("line",{x1:L,x2:W,y1:Y(v),y2:Y(v),stroke:"var(--grid)"},s);el("text",{x:L-6,y:Y(v)+4,"text-anchor":"end"},s).textContent=fmt$(v)});
  const showAll=bw>=34;
  wks.forEach((w,i)=>{const c=costs[i],cx=L+(i+.5)*(W-L)/n,x=cx-bw/2,y=Y(c),h=Y(0)-y;
   const bar=el("path",{d:h>4?`M${x},${Y(0)}V${y+4}q0,-4 4,-4h${bw-8}q4,0 4,4V${Y(0)}Z`:`M${x},${Y(0)}v${-Math.max(h,.5)}h${bw}v${Math.max(h,.5)}Z`,
-   fill:"var(--s1)",opacity:w.current?.55:1},s);
+   fill:"var(--accent)",opacity:w.current?.55:1},s);
   hover(bar,`<b>Week of ${w.week}${w.current?" (in progress)":""}</b>${detail(sum(Object.values(w.models)))}`);
   if(showAll||c===Math.max(...costs)||w.current)el("text",{x:cx,y:y-5,"text-anchor":"middle",style:"fill:var(--ink)"},s).textContent=fmt$(c);
-  if(i%Math.ceil(n/Math.floor(W/70))===0||i===n-1)el("text",{x:cx,y:H-B+16,"text-anchor":"middle"},s).textContent=w.week.slice(5)});
+  if(i%Math.ceil(n/Math.floor(W/80))===0||i===n-1)el("text",{x:cx,y:H-B+16,"text-anchor":"middle"},s).textContent=w.week.slice(5)});
  if(done.length){el("line",{x1:L,x2:W,y1:Y(avg),y2:Y(avg),stroke:"var(--ink2)","stroke-dasharray":"4 4"},s);
   el("text",{x:L+4,y:Y(avg)-5,"text-anchor":"start",style:"fill:var(--ink2)"},s).textContent=`avg ${fmt$(avg)}`}
  table("t0",["Week of","Messages","Total tokens","Est. cost"],D.weeks.map(w=>{const r=sum(Object.values(w.models));
