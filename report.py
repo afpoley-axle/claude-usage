@@ -10,6 +10,11 @@ MAX_SERIES = 4  # models and projects each get 4 hues, disjoint so colors never 
 # Anthropic API list prices, $ per million tokens: (input, output, cache read).
 # Cache writes bill at 1.25x input (5-minute TTL) or 2x input (1-hour TTL).
 # Source: claude-api skill model table, cached 2026-09-25. Update as prices change.
+#
+# To add or update a model: add one line below with its model ID (dated IDs such
+# as "claude-haiku-4-5-20251001" match their undated prefix) and its list prices,
+# then rerun collect.py. Models with no entry are counted as $0 and listed in a
+# note at the bottom of the report, so a new model never breaks the run.
 PRICES = {
     "claude-fable-5-1": (10.00, 50.00, 0.25),
     "claude-fable-5": (10.00, 50.00, 1.00),
@@ -97,10 +102,10 @@ select{font:inherit;padding:4px 8px;border-radius:6px;border:1px solid var(--lin
 <div class="card"><h2 id="h0"></h2><p class="note" id="n0"></p>
 <div class="tiles" id="tiles0"></div><div id="c0"></div>
 <details><summary>Table</summary><div id="t0"></div></details></div>
-<div class="card"><h2 id="h3">Weekly total by project</h2><p class="note">Allowance weeks, Thursday 15:00 to Thursday 15:00 local. Projects beyond the top four are grouped as Other (hatched).</p>
+<div class="card"><h2 id="h3">Weekly total by project</h2><p class="note">Allowance weeks, <span class="reset"></span> to <span class="reset"></span> local. Projects beyond the top four are grouped as Other (hatched).</p>
 <div class="legend" id="lg3"></div><div id="c3"></div>
 <details><summary>Table</summary><div id="t3"></div></details></div>
-<div class="card"><h2 id="h4">Weekly total by model</h2><p class="note">Allowance weeks, Thursday 15:00 to Thursday 15:00 local. Models beyond the top four are grouped as Other.</p>
+<div class="card"><h2 id="h4">Weekly total by model</h2><p class="note">Allowance weeks, <span class="reset"></span> to <span class="reset"></span> local. Models beyond the top four are grouped as Other.</p>
 <div class="legend" id="lg4"></div><div id="c4"></div>
 <details><summary>Table</summary><div id="t4"></div></details></div>
 <p class="foot" id="foot"></p>
@@ -208,7 +213,8 @@ function render(){const wk=document.getElementById("wk").value,w=D.weeks.find(x=
  const ms=D.models.filter(m=>w.models[m]).sort((a,b)=>val(w.models[b])-val(w.models[a]));
  hbars("c2",ms.map(m=>({name:m,parts:[{key:m,r:w.models[m]}]})),colM);
  table("t2",["Model"].concat(HEAD),ms.map(m=>[m].concat(cells(w.models[m]))))}
-document.getElementById("sub").textContent=`Generated ${D.generated}. Weeks start Thursday 15:00 local, matching the allowance reset.`;
+document.querySelectorAll(".reset").forEach(e=>e.textContent=D.reset);
+document.getElementById("sub").textContent=`Generated ${D.generated}. Weeks start ${D.reset} local, matching the allowance reset.`;
 const FOOT="Estimated cost uses Anthropic API list prices per million tokens: input, output, cache reads, and cache writes at 1.25x input (5-minute) or 2x input (1-hour). It shows what this usage would cost on the API, not your plan's charges."
  +(D.unpriced.length?` No price on file for: ${D.unpriced.join(", ")} (counted as $0).`:"");
 const foot=()=>document.getElementById("foot").textContent=M==="cost"?FOOT:"";
@@ -227,7 +233,7 @@ def top_keys(totals):
     return ranked[:MAX_SERIES] + (["Other"] if len(ranked) > MAX_SERIES else [])
 
 
-def write_report(daily, path, current_week):
+def write_report(daily, path, current_week, reset="Thursday 15:00"):
     model_totals, project_totals = defaultdict(int), defaultdict(int)
     for (_, _, project, model), m in daily.items():
         model_totals[model] += total(m)
@@ -245,6 +251,7 @@ def write_report(daily, path, current_week):
                 target[k] += v
 
     data = {
+        "reset": reset,
         "generated": f"{datetime.now().astimezone():%Y-%m-%d %H:%M %Z}",
         "models": models,
         "projects": projects,

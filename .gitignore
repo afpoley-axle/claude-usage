@@ -1,3 +1,5 @@
+# Your usage data is personal: never commit it to the tool repo.
+data/
 logs/
 __pycache__/
 .DS_Store

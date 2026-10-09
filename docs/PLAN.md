@@ -6,14 +6,15 @@ Status key: `[ ]` todo, `[x]` done.
 
 ## Phase 0: Before sharing (blockers)
 
-- [ ] **Privacy decision.** `data/daily.csv`, `WEEKLY.md` and `report.html` contain real project names, and the git history has about 14 snapshots of them. Choose one:
+- [x] **Privacy decision.** Decided: tool-only repo, `data/` git-ignored, all generated files written there. (Git history before this branch still contains old snapshots; see open questions.)
+- (original options:) `data/daily.csv`, `WEEKLY.md` and `report.html` contain real project names, and the git history has about 14 snapshots of them. Choose one:
   - Tool-only repo: gitignore `data/`, `WEEKLY.md`, `report.html`; keep personal data in a separate private repo.
   - Keep data, but add `--anonymize` / `PROJECT_ALIASES` to `collect.py` and squash or rewrite history.
-- [ ] Add `LICENSE` (MIT).
-- [ ] Gitignore each user's own `data/` so coworkers don't commit it back.
-- [ ] Make the allowance reset configurable (`RESET_WEEKDAY` / `RESET_HOUR` in `collect.py`) via env var or `config.toml`; document how to find your own reset time.
-- [ ] Make `git push` in `update.sh` opt-in.
-- [ ] Document the `PRICES` table in `report.py` and the "unpriced model" warning, so users know to update it when new models ship.
+- [x] Add `LICENSE` (MIT).
+- [x] Gitignore each user's own `data/` so coworkers don't commit it back.
+- [x] Make the allowance reset configurable (`RESET_WEEKDAY` / `RESET_HOUR` in `collect.py`) via env var or `config.toml`; document how to find your own reset time.
+- [x] Make `git push` in `update.sh` opt-in.
+- [x] Document the `PRICES` table in `report.py` and the "unpriced model" warning, so users know to update it when new models ship.
 
 ## Phase 1: Demo data and README figure
 
@@ -78,6 +79,7 @@ Design note: a Routine runs in the cloud and cannot read `~/.claude/projects` on
 
 ## Open questions
 
+- Git history on the remote still holds old data snapshots (real project names). Before sharing the repo, publish from a fresh repo or rewrite history (`git filter-repo --path data --path WEEKLY.md --path report.html --invert-paths`).
 - Tool-only repo or keep data? (decides Phase 0)
 - Pattern A or B for Slack? Which channel?
 - Is this for individual use per person, or a team rollup?
