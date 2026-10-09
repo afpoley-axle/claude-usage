@@ -18,6 +18,10 @@ Outputs, written to `data/` (git-ignored):
 
 Claude Code deletes transcripts after about 30 days, so `daily.csv` keeps the history. Each run merges new numbers into it by taking the larger value per row, so pruned transcripts never remove data. Run it at least every few weeks or older days will be lost before they're recorded.
 
+## Setup
+
+See the [setup guide](docs/SETUP.md), or open this repo in Claude Code and ask it to help you set up (see [CLAUDE.md](CLAUDE.md)).
+
 ## Usage
 
 ```bash

@@ -27,13 +27,14 @@ Status key: `[ ]` todo, `[x]` done.
 
 ## Phase 2: Setup guide (`docs/SETUP.md`)
 
-- [ ] Prerequisites: Python 3, git; macOS (launchd), with notes for Linux (cron/systemd) and Windows (Task Scheduler/WSL).
-- [ ] Steps: clone, run `python3 collect.py`, open `report.html`, optionally `./install-schedule.sh`, how to uninstall.
-- [ ] Where transcripts live; `CLAUDE_CONFIG_DIR`.
-- [ ] The 30-day pruning caveat: the first run recovers only about 30 days, so run it early.
-- [ ] Optional tip: raise `cleanupPeriodDays` in Claude Code settings.
-- [ ] Troubleshooting: "No transcripts found", launchd not firing (`logs/update.log`), wrong week boundaries.
-- [ ] Link from the README.
+- [x] Prerequisites: Python 3, git; macOS (launchd), with notes for Linux (cron/systemd) and Windows (Task Scheduler/WSL).
+- [x] Steps: clone, run `python3 collect.py`, open `report.html`, optionally `./install-schedule.sh`, how to uninstall.
+- [x] Where transcripts live; `CLAUDE_CONFIG_DIR`.
+- [x] The 30-day pruning caveat: the first run recovers only about 30 days, so run it early.
+- [x] Optional tip: raise `cleanupPeriodDays` in Claude Code settings.
+- [x] Troubleshooting: "No transcripts found", launchd not firing (`logs/update.log`), wrong week boundaries.
+- [x] Link from the README.
+- [x] Root `CLAUDE.md` so Claude Code can walk a new user through setup.
 
 ## Phase 3: Routines and Slack sync (`docs/ROUTINES.md`)
 
