@@ -18,12 +18,12 @@ Status key: `[ ]` todo, `[x]` done.
 
 ## Phase 1: Demo data and README figure
 
-- [ ] `demo.py` (or `collect.py --demo`): seeded fake `daily.csv`, about 12 weeks, 4 made-up projects (`web-app`, `data-pipeline`, `docs-site`, ...), 3 current models. No real data.
-- [ ] Generate `examples/report.html` from the demo data.
-- [ ] Capture `docs/img/portal.png` plus a dark-mode variant with the browser tool.
-- [ ] Embed the screenshot at the top of the README.
+- [x] `demo.py` (or `collect.py --demo`): seeded fake `daily.csv`, about 12 weeks, 4 made-up projects (`web-app`, `data-pipeline`, `docs-site`, ...), 3 current models. No real data.
+- [x] Generate `examples/report.html` from the demo data.
+- [x] Capture `docs/img/portal.png` plus a dark-mode variant with the browser tool.
+- [x] Embed the screenshot at the top of the README.
 - [ ] Optional: GitHub Pages link to the live demo report.
-- [ ] `make screenshots` target so images don't go stale.
+- [x] `./screenshots.sh` regenerates the demo report and screenshots (instead of a Makefile).
 
 ## Phase 2: Setup guide (`docs/SETUP.md`)
 
