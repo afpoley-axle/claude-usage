@@ -23,6 +23,7 @@ import collect  # noqa: E402
 from report import write_report  # noqa: E402
 
 LAST_DAY = date(2026, 10, 8)  # fixed so the example is reproducible
+STAMP = "2026-10-08 18:00"  # fixed "generated" time so reruns produce identical files
 WEEKS = 12
 PROJECTS = {  # name -> (base share of activity, weekly drift)
     "web-app": (1.0, 0.00),
@@ -57,7 +58,7 @@ def generate(rng):
             if rng.random() > min(0.35 + weight, 0.95):
                 continue
             for model, mshare in zip(MODELS, model_mix(progress)):
-                msgs = int(rng.gauss(60, 15) * weight * intensity * mshare * 3)
+                msgs = int(rng.gauss(60, 15) * weight * intensity * mshare * 0.75)
                 if msgs < 1:
                     continue
                 cw = int(msgs * rng.uniform(6e3, 11e3))
@@ -76,9 +77,9 @@ def main():
     daily = generate(random.Random(2026))
     collect.write_csv(collect.DAILY_CSV, collect.KEY + collect.METRICS,
                       [list(k) + [v[m] for m in collect.METRICS] for k, v in sorted(daily.items())])
-    collect.build_report(daily)
+    collect.build_report(daily, STAMP)
     write_report(daily, collect.REPORT_HTML, collect.week_start(
-        datetime.combine(LAST_DAY, time(12)).astimezone()), "Thu 15:00")
+        datetime.combine(LAST_DAY, time(12)).astimezone()), "Thu 15:00", STAMP)
     print(f"{len(daily)} synthetic daily rows -> {EXAMPLES}")
 
 

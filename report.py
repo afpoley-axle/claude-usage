@@ -183,10 +183,9 @@ function perWeek(){const host=document.getElementById("c0");host.innerHTML="";
   const bar=el("path",{d:h>4?`M${x},${Y(0)}V${y+4}q0,-4 4,-4h${bw-8}q4,0 4,4V${Y(0)}Z`:`M${x},${Y(0)}v${-Math.max(h,.5)}h${bw}v${Math.max(h,.5)}Z`,
    fill:"var(--accent)",opacity:w.current?.55:1},s);
   hover(bar,`<b>Week of ${w.week}${w.current?" (in progress)":""}</b>${detail(sum(Object.values(w.models)))}`);
-  if(showAll||c===Math.max(...costs)||w.current)el("text",{x:cx,y:y-5,"text-anchor":"middle",style:"fill:var(--ink)"},s).textContent=fv(c);
+  if(showAll||c===Math.max(...costs)||w.current)el("text",{x:cx,y:y-5,"text-anchor":"middle",style:"fill:var(--ink);paint-order:stroke;stroke:var(--card);stroke-width:4px"},s).textContent=fv(c);
   if(i%Math.ceil(n/Math.floor(W/80))===0||i===n-1)el("text",{x:cx,y:H-B+16,"text-anchor":"middle"},s).textContent=w.week.slice(5)});
- if(done.length){el("line",{x1:L,x2:W,y1:Y(avg),y2:Y(avg),stroke:"var(--ink2)","stroke-dasharray":"4 4"},s);
-  el("text",{x:L+4,y:Y(avg)-5,"text-anchor":"start",style:"fill:var(--ink2)"},s).textContent=`avg ${fv(avg)}`}
+ if(done.length){el("line",{x1:L,x2:W,y1:Y(avg),y2:Y(avg),stroke:"var(--ink2)","stroke-dasharray":"4 4"},s)}
  document.getElementById("h0").textContent=M==="cost"?"Estimated cost per week":"Tokens per week";
  table("t0",["Week of","Messages","Total tokens"].concat(M==="cost"?["Est. cost"]:[]),D.weeks.map(w=>{const r=sum(Object.values(w.models));
   return[w.week+(w.current?" (in progress)":""),r.messages.toLocaleString(),fmtN(tot(r))].concat(M==="cost"?[fmt$(r.cost)]:[])}))}
@@ -233,7 +232,7 @@ def top_keys(totals):
     return ranked[:MAX_SERIES] + (["Other"] if len(ranked) > MAX_SERIES else [])
 
 
-def write_report(daily, path, current_week, reset="Thursday 15:00"):
+def write_report(daily, path, current_week, reset="Thursday 15:00", generated=None):
     model_totals, project_totals = defaultdict(int), defaultdict(int)
     for (_, _, project, model), m in daily.items():
         model_totals[model] += total(m)
@@ -252,7 +251,7 @@ def write_report(daily, path, current_week, reset="Thursday 15:00"):
 
     data = {
         "reset": reset,
-        "generated": f"{datetime.now().astimezone():%Y-%m-%d %H:%M %Z}",
+        "generated": generated or f"{datetime.now().astimezone():%Y-%m-%d %H:%M %Z}",
         "models": models,
         "projects": projects,
         "unpriced": sorted(m for m in model_totals if price_for(m) is None),
