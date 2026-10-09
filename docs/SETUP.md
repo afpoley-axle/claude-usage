@@ -92,6 +92,10 @@ CLAUDE_USAGE_PUSH=1 ./update.sh
 
 `update.sh` refuses to push unless the data folder is its own git repo, so your data cannot end up in the tool repo.
 
+## 7. Weekly Slack DM (optional)
+
+Get last week's totals as a Slack message to yourself, built locally with `python3 summary.py`. See [SLACK.md](SLACK.md). It only ever goes to your own DM.
+
 ## Updating prices
 
 Estimated cost uses the `PRICES` table at the top of `report.py`. When a new model ships, add a line for it and rerun `collect.py`. Models without a price are counted as $0 and listed at the bottom of the report.

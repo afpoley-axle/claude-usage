@@ -36,18 +36,17 @@ Status key: `[ ]` todo, `[x]` done.
 - [x] Link from the README.
 - [x] Root `CLAUDE.md` so Claude Code can walk a new user through setup.
 
-## Phase 3: Routines and Slack sync (`docs/ROUTINES.md`)
+## Phase 3: Slack summary (local, self-DM only)
 
-Design note: a Routine runs in the cloud and cannot read `~/.claude/projects` on a laptop.
+Decision: Pattern B (local only). A cloud Routine (Pattern A: push data to a private repo, Routine reads it) is a possible future alternative, documented but not built. Slack messages go **only** to the user's own DM; this is an explicit rule in `CLAUDE.md` and `docs/SLACK.md`.
 
-- [ ] Pattern A (recommended): launchd runs `update.sh` and pushes `data/` to GitHub. A weekly Routine (Thursday, shortly after the reset) clones the repo, reads the CSVs, and posts a summary to Slack via the Slack connector.
-- [ ] Pattern B (local only): a scheduled task on the machine or a Slack webhook called from `update.sh` (`slack-post.sh` using `curl`).
-- [ ] `summary.py`: deterministic Slack text (week-over-week change, top project, top model, cost) so the Routine only posts it.
-- [ ] Copy-pasteable Routine prompt.
-- [ ] Connector and channel setup steps; schedule recommendation.
-- [ ] Sample Slack message screenshot (synthetic data).
-- [ ] Failure modes: laptop asleep, stale data, missed runs.
-- [ ] Team version: each person pushes `data/<username>/daily.csv`; the Routine aggregates.
+- [x] `summary.py`: deterministic Slack text for the last completed week (`--no-projects`, `--link`).
+- [x] `docs/SLACK.md`: setup, copy-pasteable scheduled-task prompt, self-DM rule, comparison of delivery methods.
+- [x] Self-DM-only rule in `CLAUDE.md`.
+- [x] Sample message using synthetic data.
+- [ ] Migrate the maintainer's existing scheduled task `claude-usage-slack-report`: its paths still point at the old repo-root `report.html`/`WEEKLY.md`, and it fires at 14:45 (plus jitter), before the reset.
+- [ ] Optional: `summary.py` tests (week selection around the reset boundary).
+- [ ] Future: team rollup via a private shared data repo and a cloud Routine (must still respect the self-DM rule or get its own explicit rule).
 
 ## Phase 4: New figures and data
 
@@ -82,5 +81,4 @@ Design note: a Routine runs in the cloud and cannot read `~/.claude/projects` on
 
 - Git history on the remote still holds old data snapshots (real project names). Before sharing the repo, publish from a fresh repo or rewrite history (`git filter-repo --path data --path WEEKLY.md --path report.html --invert-paths`).
 - Tool-only repo or keep data? (decides Phase 0)
-- Pattern A or B for Slack? Which channel?
 - Is this for individual use per person, or a team rollup?

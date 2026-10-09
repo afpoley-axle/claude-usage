@@ -20,7 +20,7 @@ Claude Code deletes transcripts after about 30 days, so `daily.csv` keeps the hi
 
 ## Setup
 
-See the [setup guide](docs/SETUP.md), or open this repo in Claude Code and ask it to help you set up (see [CLAUDE.md](CLAUDE.md)).
+See the [setup guide](docs/SETUP.md) (and [SLACK.md](docs/SLACK.md) for an optional weekly DM to yourself), or open this repo in Claude Code and ask it to help you set up (see [CLAUDE.md](CLAUDE.md)).
 
 ## Usage
 
