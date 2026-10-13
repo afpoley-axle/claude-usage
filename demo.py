@@ -23,6 +23,7 @@ import collect  # noqa: E402
 from report import write_report  # noqa: E402
 
 LAST_DAY = date(2026, 10, 8)  # fixed so the example is reproducible
+BUDGET = 90  # example weekly budget in estimated dollars
 STAMP = "2026-10-08 18:00"  # fixed "generated" time so reruns produce identical files
 WEEKS = 12
 PROJECTS = {  # name -> (base share of activity, weekly drift)
@@ -79,7 +80,7 @@ def main():
                       [list(k) + [v[m] for m in collect.METRICS] for k, v in sorted(daily.items())])
     collect.build_report(daily, STAMP)
     write_report(daily, collect.REPORT_HTML, collect.week_start(
-        datetime.combine(LAST_DAY, time(12)).astimezone()), "Thu 15:00", STAMP)
+        datetime.combine(LAST_DAY, time(12)).astimezone()), "Thu 15:00", STAMP, BUDGET)
     print(f"{len(daily)} synthetic daily rows -> {EXAMPLES}")
 
 

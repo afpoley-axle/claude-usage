@@ -84,6 +84,28 @@ class ResetScheduleTest(unittest.TestCase):
                 self.run_with(**env)
 
 
+class WeeklyBudgetTest(unittest.TestCase):
+    def run_with(self, value):
+        env = {} if value is None else {"CLAUDE_USAGE_WEEKLY_BUDGET": value}
+        with mock.patch.dict(os.environ, env, clear=False):
+            if value is None:
+                os.environ.pop("CLAUDE_USAGE_WEEKLY_BUDGET", None)
+            return collect.weekly_budget()
+
+    def test_unset_or_blank_is_none(self):
+        self.assertIsNone(self.run_with(None))
+        self.assertIsNone(self.run_with("  "))
+
+    def test_accepts_numbers_and_dollar_sign(self):
+        self.assertEqual(self.run_with("150"), 150.0)
+        self.assertEqual(self.run_with("$99.5"), 99.5)
+
+    def test_rejects_bad_values(self):
+        for bad in ("abc", "0", "-5"):
+            with self.assertRaises(SystemExit, msg=bad):
+                self.run_with(bad)
+
+
 class MergeDailyTest(unittest.TestCase):
     def row(self, **kw):
         base = dict.fromkeys(collect.METRICS, 0)

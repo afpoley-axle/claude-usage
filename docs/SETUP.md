@@ -37,6 +37,8 @@ export CLAUDE_USAGE_RESET_HOUR=9      # 0-23, local time
 
 Add these to your shell profile too. To find your reset time, check the usage screen in Claude Code or your Claude account settings, which shows when your weekly limit resets. Changing it later re-buckets only days that still have transcripts (about 30 days).
 
+Optional: to see a budget line on the report's burn-down chart, set a weekly amount in estimated dollars, for example `export CLAUDE_USAGE_WEEKLY_BUDGET=150`. It is only drawn in the report's Est. cost view.
+
 ## 4. Run it
 
 ```bash

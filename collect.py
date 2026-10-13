@@ -51,6 +51,20 @@ def reset_schedule():
 RESET_WEEKDAY, RESET_HOUR = reset_schedule()
 
 
+def weekly_budget():
+    """Optional weekly budget in estimated dollars (CLAUDE_USAGE_WEEKLY_BUDGET), drawn on the burn-down chart."""
+    raw = os.environ.get("CLAUDE_USAGE_WEEKLY_BUDGET", "").strip().lstrip("$")
+    if not raw:
+        return None
+    try:
+        value = float(raw)
+    except ValueError:
+        value = 0
+    if value <= 0:
+        sys.exit(f"Bad CLAUDE_USAGE_WEEKLY_BUDGET={raw!r}: use a positive dollar amount, e.g. 150")
+    return value
+
+
 def project_name(cwd, fallback):
     if cwd:
         cwd = re.sub(r"/\.claude/worktrees/.*$", "", cwd)
@@ -203,7 +217,7 @@ def main():
               [list(k) + [v[m] for m in METRICS] for k, v in sorted(daily.items())])
     build_report(daily)
     write_report(daily, REPORT_HTML, week_start(datetime.now().astimezone()),
-                 f"{WEEKDAYS[RESET_WEEKDAY].title()[:3]} {RESET_HOUR:02d}:00")
+                 f"{WEEKDAYS[RESET_WEEKDAY].title()[:3]} {RESET_HOUR:02d}:00", budget=weekly_budget())
     print(f"{len(daily)} daily rows -> {DATA}: {DAILY_CSV.name}, {WEEKLY_CSV.name}, {REPORT_MD.name}, {REPORT_HTML.name}")
 
 

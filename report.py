@@ -98,6 +98,9 @@ select{font:inherit;padding:4px 8px;border-radius:6px;border:1px solid var(--lin
 <details><summary>Table</summary><div id="t1"></div></details></div>
 <div class="card"><h2 id="h2">By model</h2><p class="note" id="n2"></p><div id="c2"></div>
 <details><summary>Table</summary><div id="t2"></div></details></div>
+<div class="card"><h2 id="h7">Burn-down</h2><p class="note" id="n7"></p>
+<div class="legend" id="lg7"></div><div class="tiles" id="tiles7"></div><div id="c7"></div>
+<details><summary>Table</summary><div id="t7"></div></details></div>
 <h3>Every week</h3>
 <div class="card"><h2 id="h0"></h2><p class="note" id="n0"></p>
 <div class="tiles" id="tiles0"></div><div id="c0"></div>
@@ -139,7 +142,7 @@ function hover(e,html){e.classList.add("mark");e.addEventListener("mousemove",ev
  e.addEventListener("mouseleave",()=>tip.style.display="none")}
 const detail=r=>`${M==="cost"?fmt$(r.cost)+" est. · ":""}${fmtN(tot(r))} tokens<br>${r.messages.toLocaleString()} msgs · ${fmtN(r.output)} output`;
 function legend(id,keys,col){document.getElementById(id).innerHTML=keys.map(k=>`<span><i style="background:${swatch(col(k))}"></i>${k}</span>`).join("")}
-function ticks(max,k=5){const s=Math.pow(10,Math.floor(Math.log10(max||1)));const st=[1,2,2.5,5,10].map(x=>x*s).find(x=>max/x<=k);
+function ticks(max,k=5){const s=Math.pow(10,Math.floor(Math.log10(max||1))-1);const st=[1,2,2.5,5,10,20,50].map(x=>x*s).find(x=>max/x<=k);
  const out=[];for(let v=0;v<=max+1e-9;v+=st)out.push(v);if(out[out.length-1]<max)out.push(out[out.length-1]+st);return out}
 function table(id,head,rows){document.getElementById(id).innerHTML="<table><tr>"+head.map(h=>`<th>${h}</th>`).join("")+"</tr>"+
  rows.map(r=>"<tr>"+r.map((c,i)=>`<td${i<2&&typeof c==="string"&&!/^[$\\d]/.test(c)?' class="l"':""}>${c}</td>`).join("")+"</tr>").join("")+"</table>"}
@@ -238,6 +241,36 @@ function history(){
  table("t3",["Week of","Project"].concat(HEAD),D.weeks.flatMap(w=>{const bp=byProject(w);
   return D.projects.filter(p=>bp[p]).map(p=>[w.week,p].concat(cells(bp[p])))}));
  table("t4",["Week of","Model"].concat(HEAD),D.weeks.flatMap(w=>D.models.filter(m=>w.models[m]).map(m=>[w.week,m].concat(cells(w.models[m])))))}
+const DAYN=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],DAYMS=864e5,day0=w=>Date.parse(w+"T12:00:00Z");
+const dayKey=(w,i)=>new Date(day0(w)+i*DAYMS).toISOString().slice(0,10);
+function cumSeries(w){let acc=0;return Array.from({length:8},(_,i)=>{const r=w.days[dayKey(w.week,i)];acc+=r?val(r):0;return acc})}
+function burndown(w){const host=document.getElementById("c7");host.innerHTML="";
+ const cur=cumSeries(w),others=D.weeks.filter(x=>!x.current&&x.week!==w.week),oc=others.map(cumSeries);
+ const last=w.current?Math.max(0,Math.min(7,Math.round((Date.parse(D.generated.slice(0,10)+"T12:00:00Z")-day0(w.week))/DAYMS))):7;
+ const typ=oc.length?cur.map((_,i)=>oc.reduce((a,c)=>a+c[i],0)/oc.length):null,budget=M==="cost"&&D.budget?D.budget:null;
+ document.getElementById("h7").textContent=`${M==="cost"?"Estimated cost":"Token"} burn-down, week of ${w.week}`;
+ document.getElementById("n7").textContent=`Running total through the allowance week, starting at the reset (${D.reset}); each point is the total at the end of that day. `+
+  (typ?`The dashed line is the typical week: the average of ${oc.length} other completed weeks. `:"")+(budget?`The red line is your weekly budget.`:"");
+ const sw=(c,dash)=>`<i style="background:${dash?"repeating-linear-gradient(90deg,"+c+" 0 4px,transparent 4px 8px)":c};height:3px;vertical-align:3px"></i>`;
+ document.getElementById("lg7").innerHTML=`<span>${sw("var(--accent)")}This week</span>`+(typ?`<span>${sw("var(--ink2)",1)}Typical week</span><span>${sw("var(--muted)")}Earlier weeks</span>`:"")+(budget?`<span>${sw("var(--p4)",1)}Budget</span>`:"");
+ document.getElementById("tiles7").innerHTML=[["Used so far",fv(cur[last])],...(typ?[["Typical by this day",fv(typ[last])],["Typical full week",fv(typ[7])]]:[])].map(([k,v])=>`<div class="tile"><span>${k}</span><b>${v}</b></div>`).join("");
+ const W=Math.max(host.clientWidth,300),L=62,R=16,T=14,B=40,H=280;
+ const max=Math.max(...cur.slice(0,last+1),...oc.flat(),budget||0,1e-9),tk=ticks(max),top=tk[tk.length-1];
+ const X=i=>L+(W-L-R)*i/7,Y=v=>H-B-(H-B-T)*v/top;
+ const s=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img"},host);
+ tk.forEach(v=>{el("line",{x1:L,x2:W-R,y1:Y(v),y2:Y(v),stroke:"var(--grid)"},s);el("text",{x:L-6,y:Y(v)+4,"text-anchor":"end"},s).textContent=fv(v)});
+ for(let i=0;i<8;i++)el("text",{x:X(i),y:H-B+16,"text-anchor":"middle"},s).textContent=DAYN[new Date(day0(w.week)+i*DAYMS).getUTCDay()];
+ const path=c=>c.map((v,i)=>(i?"L":"M")+X(i)+","+Y(v)).join("");
+ oc.forEach(c=>el("path",{d:path(c),fill:"none",stroke:"var(--muted)","stroke-width":1.5,opacity:.35},s));
+ if(typ)el("path",{d:path(typ),fill:"none",stroke:"var(--ink2)","stroke-width":2,"stroke-dasharray":"5 4"},s);
+ if(budget){el("line",{x1:L,x2:W-R,y1:Y(budget),y2:Y(budget),stroke:"var(--p4)","stroke-width":2,"stroke-dasharray":"6 4"},s);
+  el("text",{x:W-R,y:Y(budget)-6,"text-anchor":"end",style:"fill:var(--p4)"},s).textContent=`Budget ${fv(budget)}`}
+ el("path",{d:path(cur.slice(0,last+1)),fill:"none",stroke:"var(--accent)","stroke-width":3,"stroke-linejoin":"round"},s);
+ cur.slice(0,last+1).forEach((v,i)=>{const r=w.days[dayKey(w.week,i)],c=el("circle",{cx:X(i),cy:Y(v),r:4,fill:"var(--accent)"},s);
+  hover(c,`<b>${DAYN[new Date(day0(w.week)+i*DAYMS).getUTCDay()]} ${dayKey(w.week,i)}</b>${fv(v)} so far<br>${r?fv(val(r))+" that day":"no usage"}${typ?"<br>typical: "+fv(typ[i]):""}`)});
+ el("text",{x:X(last),y:Y(cur[last])-10,"text-anchor":last>5?"end":"middle",style:"fill:var(--ink)"},s).textContent=fv(cur[last]);
+ table("t7",["Day","Used that day","Running total"].concat(typ?["Typical running total"]:[]),cur.map((v,i)=>{const r=w.days[dayKey(w.week,i)];
+  return[`${DAYN[new Date(day0(w.week)+i*DAYMS).getUTCDay()]} ${dayKey(w.week,i).slice(5)}`,r?fv(val(r)):"–",i<=last?fv(v):"–"].concat(typ?[fv(typ[i])]:[])}))}
 function render(){const wk=document.getElementById("wk").value,w=D.weeks.find(x=>x.week===wk);
  const all=sum(Object.values(w.models));
  document.getElementById("tiles").innerHTML=(M==="cost"?[["Estimated cost",fmt$(all.cost)]]:[]).concat([["Total tokens",fmtN(tot(all))],["Output tokens",fmtN(all.output)],
@@ -252,7 +285,8 @@ function render(){const wk=document.getElementById("wk").value,w=D.weeks.find(x=
  table("t1",["Project","Model"].concat(HEAD),projs.flatMap(p=>D.models.filter(m=>p.ms[m]).map(m=>[p.name,m].concat(cells(p.ms[m])))));
  const ms=D.models.filter(m=>w.models[m]).sort((a,b)=>val(w.models[b])-val(w.models[a]));
  hbars("c2",ms.map(m=>({name:m,parts:[{key:m,r:w.models[m]}]})),colM);
- table("t2",["Model"].concat(HEAD),ms.map(m=>[m].concat(cells(w.models[m]))))}
+ table("t2",["Model"].concat(HEAD),ms.map(m=>[m].concat(cells(w.models[m]))));
+ burndown(w)}
 document.querySelectorAll(".reset").forEach(e=>e.textContent=D.reset);
 document.getElementById("sub").textContent=`Generated ${D.generated}. Weeks start ${D.reset} local, matching the allowance reset.`;
 const FOOT="Estimated cost uses Anthropic API list prices per million tokens: input, output, cache reads, and cache writes at 1.25x input (5-minute) or 2x input (1-hour). It shows what this usage would cost on the API, not your plan's charges."
@@ -275,7 +309,7 @@ def top_keys(totals):
     return ranked[:MAX_SERIES] + (["Other"] if len(ranked) > MAX_SERIES else [])
 
 
-def write_report(daily, path, current_week, reset="Thursday 15:00", generated=None):
+def write_report(daily, path, current_week, reset="Thursday 15:00", generated=None, budget=None):
     model_totals, project_totals = defaultdict(int), defaultdict(int)
     for (_, _, project, model), m in daily.items():
         model_totals[model] += total(m)
@@ -285,15 +319,18 @@ def write_report(daily, path, current_week, reset="Thursday 15:00", generated=No
 
     empty = lambda: dict.fromkeys(METRICS + ["cost"], 0)
     weeks = defaultdict(lambda: {"models": defaultdict(empty),
-                                 "projects": defaultdict(lambda: defaultdict(empty))})
-    for (_, wk, project, model), m in daily.items():
+                                 "projects": defaultdict(lambda: defaultdict(empty)),
+                                 "days": defaultdict(empty)})
+    for (day, wk, project, model), m in daily.items():
         row = dict(m, cost=cost(model, m))
-        for target in (weeks[wk]["models"][label(model)], weeks[wk]["projects"][project][label(model)]):
+        for target in (weeks[wk]["models"][label(model)], weeks[wk]["projects"][project][label(model)],
+                       weeks[wk]["days"][day]):
             for k, v in row.items():
                 target[k] += v
 
     data = {
         "reset": reset,
+        "budget": budget,
         "generated": generated or f"{datetime.now().astimezone():%Y-%m-%d %H:%M %Z}",
         "models": models,
         "projects": projects,

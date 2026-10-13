@@ -11,7 +11,7 @@ _The report above is built from synthetic data, not real usage. Open [examples/r
 
 Outputs, written to `data/` (git-ignored):
 
-- `data/report.html`: charts by project and model for any week, weekly totals by project and by model (estimated cost or tokens), and weekly trends for cache hit rate and cost or tokens per message
+- `data/report.html`: charts by project and model for any week, weekly totals by project and by model (estimated cost or tokens), a burn-down of the selected week against a typical week (and an optional budget), and weekly trends for cache hit rate and cost or tokens per message
 - `data/WEEKLY.md`: weekly totals, plus a by-model and by-project breakdown for the last two weeks
 - `data/daily.csv`: the durable record, one row per date × allowance week × project × model
 - `data/weekly.csv`: weekly rollup by model
@@ -40,6 +40,7 @@ Set these as environment variables (all optional):
 |---|---|---|
 | `CLAUDE_USAGE_RESET_DAY` | `thu` | Weekday your weekly allowance resets (`mon`..`sun`) |
 | `CLAUDE_USAGE_RESET_HOUR` | `15` | Hour of that reset, 0-23 local time |
+| `CLAUDE_USAGE_WEEKLY_BUDGET` | unset | Weekly budget in estimated dollars, drawn as a line on the cost burn-down chart (e.g. `150`) |
 | `CLAUDE_USAGE_DATA_DIR` | `./data` | Where CSVs and reports are written |
 | `CLAUDE_USAGE_PUSH` | unset | Set to `1` to have `update.sh` commit and push the data directory |
 | `CLAUDE_CONFIG_DIR` | `~/.claude` | Where Claude Code keeps transcripts |
