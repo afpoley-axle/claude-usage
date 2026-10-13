@@ -67,6 +67,13 @@ Estimated cost uses Anthropic API list prices, with cache writes at 1.25x input 
 
 Prices live in the `PRICES` table at the top of `report.py`, as `model ID: (input, output, cache read)` in dollars per million tokens. Dated IDs like `claude-haiku-4-5-20251001` match their undated entry. When a new model ships, add one line and rerun `collect.py`. A model with no entry is counted as $0 and named in a note at the bottom of `report.html`, so a missing price never breaks the run, but your cost totals will be low until you add it.
 
+## Development
+
+```bash
+python3 -m unittest discover   # tests use synthetic transcripts only
+python3 demo.py                # regenerate the synthetic example in examples/
+```
+
 ## License
 
 MIT, see [LICENSE](LICENSE).

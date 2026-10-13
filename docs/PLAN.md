@@ -44,8 +44,8 @@ Decision: Pattern B (local only). A cloud Routine (Pattern A: push data to a pri
 - [x] `docs/SLACK.md`: setup, copy-pasteable scheduled-task prompt, self-DM rule, comparison of delivery methods.
 - [x] Self-DM-only rule in `CLAUDE.md`.
 - [x] Sample message using synthetic data.
-- [ ] Migrate the maintainer's existing scheduled task `claude-usage-slack-report`: its paths still point at the old repo-root `report.html`/`WEEKLY.md`, and it fires at 14:45 (plus jitter), before the reset.
-- [ ] Optional: `summary.py` tests (week selection around the reset boundary).
+- [x] Migrated the maintainer's scheduled task `claude-usage-slack-report`: new `data/` paths, uses `summary.py`, fires after the reset (15:05 plus jitter), self-DM only.
+- [x] `summary.py` tests (week selection around the reset boundary).
 - [ ] Future: team rollup via a private shared data repo and a cloud Routine (must still respect the self-DM rule or get its own explicit rule).
 
 ## Phase 4: New figures and data
@@ -62,7 +62,7 @@ Decision: Pattern B (local only). A cloud Routine (Pattern A: push data to a pri
 
 ## Phase 5: Code and repo hygiene
 
-- [ ] Tests: `week_start` (DST and boundaries), dedup by message and request ID, merge-by-max, `cost()`.
+- [x] Tests (`tests/`, `python3 -m unittest discover`): `week_start` (boundaries, rollover, DST, custom resets), reset config parsing, dedup by message and request ID, merge-by-max (extracted to `merge_daily`), CSV round trip, `cost()`, and `summary.py` week selection.
 - [ ] Move the inline HTML in `report.py` to `template.html`.
 - [ ] `argparse` for `collect.py` (`--no-push`, `--demo`, `--anonymize`, `--since`).
 - [ ] `install-schedule.sh`: derive the schedule from the configured reset; add `uninstall-schedule.sh`.
