@@ -9,6 +9,20 @@ Track your own Claude Code token usage week by week, built from the local transc
 
 _The report above is built from synthetic data, not real usage. Open [examples/report.html](examples/report.html) to try it, or regenerate it with `python3 demo.py`._
 
+## Quick start
+
+The easiest way is to let Claude Code set it up for you:
+
+```bash
+git clone https://github.com/afpoley-axle/claude-usage.git
+cd claude-usage
+claude        # or open this folder in the Claude desktop app's Code tab
+```
+
+Then say: **"Help me set up claude-usage."** Claude reads [CLAUDE.md](CLAUDE.md), checks that Python and your transcripts are there, asks when your weekly allowance resets, runs the first collection, and offers to schedule it and to set up an optional weekly Slack DM to yourself. It asks before changing your shell profile or installing anything.
+
+Prefer to do it by hand? Run `python3 collect.py` and open `data/report.html`; the [setup guide](docs/SETUP.md) has the details.
+
 Outputs, written to `data/` (git-ignored):
 
 - `data/report.html`: charts by project and model for any week, weekly totals by project and by model (estimated cost or tokens), a burn-down of the selected week against a typical week (and an optional budget), and weekly trends for cache hit rate and cost or tokens per message
@@ -18,9 +32,10 @@ Outputs, written to `data/` (git-ignored):
 
 Claude Code deletes transcripts after about 30 days, so `daily.csv` keeps the history. Each run merges new numbers into it by taking the larger value per row, so pruned transcripts never remove data. Run it at least every few weeks or older days will be lost before they're recorded.
 
-## Setup
+## Docs
 
-See the [setup guide](docs/SETUP.md) (and [SLACK.md](docs/SLACK.md) for an optional weekly DM to yourself), or open this repo in Claude Code and ask it to help you set up (see [CLAUDE.md](CLAUDE.md)).
+- [Setup guide](docs/SETUP.md): manual setup for macOS, Linux and Windows, plus troubleshooting
+- [Weekly Slack DM](docs/SLACK.md): an optional weekly summary sent only to yourself
 
 ## Usage
 
