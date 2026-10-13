@@ -16,7 +16,7 @@ import sys
 from collections import defaultdict
 from datetime import datetime
 
-from collect import KEY, METRICS, WEEKDAYS, RESET_HOUR, RESET_WEEKDAY, load_daily, week_start
+from collect import METRICS, load_daily, week_start
 from report import cost, total
 
 
