@@ -17,12 +17,16 @@ if [[ "$(git -C "$DATA_DIR" rev-parse --show-toplevel 2>/dev/null)" != "$(cd "$D
   exit 1
 fi
 git -C "$DATA_DIR" add -A
-if git -C "$DATA_DIR" diff --cached --quiet; then
+# Reports carry a "generated at" timestamp that changes every run; only commit when the usage itself changed.
+if git -C "$DATA_DIR" diff --cached --quiet -- daily.csv; then
+  git -C "$DATA_DIR" reset -q
   echo "No usage changes."
   exit 0
 fi
 git -C "$DATA_DIR" commit -q -m "Usage snapshot $(date +%Y-%m-%d)"
-if git -C "$DATA_DIR" remote | grep -q .; then
-  git -C "$DATA_DIR" push -q
+REMOTE="$(git -C "$DATA_DIR" remote | head -1)"
+if [[ -n "$REMOTE" ]]; then
+  # -u so the first push from a freshly `git init`ed data repo works without extra setup
+  git -C "$DATA_DIR" push -q -u "$REMOTE" HEAD
 fi
 echo "Committed usage snapshot."
