@@ -178,19 +178,27 @@ def build_report(daily, updated=None):
     REPORT_MD.write_text("\n".join(lines) + "\n")
 
 
-def main():
-    if not PROJECTS_DIR.is_dir():
-        sys.exit(f"No transcripts found at {PROJECTS_DIR}")
-    daily = load_daily()
-    scanned = scan_transcripts()
-    # If the reset day/hour changed, a re-scanned day lands in a different week
-    # than its old row. Drop the stale row instead of counting the day twice.
+def merge_daily(daily, scanned):
+    """Merge freshly scanned rows into the stored history (max per counter).
+
+    Rows for days whose transcripts were pruned are kept as they are. If the
+    reset day/hour changed, a re-scanned day lands in a different week than its
+    old row; drop the stale row instead of counting the day twice.
+    """
+    daily = dict(daily)
     fresh_days = {k[0:1] + k[2:] for k in scanned}
     for key in [k for k in daily if k[0:1] + k[2:] in fresh_days and k not in scanned]:
         del daily[key]
     for key, fresh in scanned.items():
         old = daily.get(key)
         daily[key] = {m: max(fresh[m], old[m]) for m in METRICS} if old else fresh
+    return daily
+
+
+def main():
+    if not PROJECTS_DIR.is_dir():
+        sys.exit(f"No transcripts found at {PROJECTS_DIR}")
+    daily = merge_daily(load_daily(), scan_transcripts())
     write_csv(DAILY_CSV, KEY + METRICS,
               [list(k) + [v[m] for m in METRICS] for k, v in sorted(daily.items())])
     build_report(daily)

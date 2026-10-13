@@ -27,6 +27,7 @@ Finish by summarizing what you set up and what the user still has to do themselv
 
 ## Working on the code
 
+- Run the tests with `python3 -m unittest discover` (stdlib only, no real data needed). Add a test with any change to `week_start`, merging, dedup, or cost logic: `daily.csv` is the user's only long-term record, so a merge bug loses history silently.
 - `collect.py`: reads transcripts, de-duplicates by (message id, request id), merges into `daily.csv` by taking the max per row (so pruned transcripts never remove history), writes `weekly.csv`, `WEEKLY.md`, `report.html`.
 - `report.py`: price table (`PRICES`) and the single-file HTML report template.
 - `demo.py` and `screenshots.sh`: synthetic example in `examples/` and README screenshots in `docs/img/`. Regenerate with `./screenshots.sh` after changing the report (needs Chrome).
