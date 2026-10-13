@@ -2,6 +2,13 @@
 
 Track your own Claude Code token usage week by week, built from the local transcripts in `~/.claude/projects`. Everything stays on your machine: this repo is just the tool, and your data is git-ignored.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/portal-dark.png">
+  <img alt="Example usage report: tokens by project and model, and tokens per week" src="docs/img/portal.png">
+</picture>
+
+_The report above is built from synthetic data, not real usage. Open [examples/report.html](examples/report.html) to try it, or regenerate it with `python3 demo.py`._
+
 Outputs, written to `data/` (git-ignored):
 
 - `data/report.html`: charts by project and model for any week, plus weekly totals by project and by model, in estimated cost or tokens
@@ -10,6 +17,10 @@ Outputs, written to `data/` (git-ignored):
 - `data/weekly.csv`: weekly rollup by model
 
 Claude Code deletes transcripts after about 30 days, so `daily.csv` keeps the history. Each run merges new numbers into it by taking the larger value per row, so pruned transcripts never remove data. Run it at least every few weeks or older days will be lost before they're recorded.
+
+## Setup
+
+See the [setup guide](docs/SETUP.md) (and [SLACK.md](docs/SLACK.md) for an optional weekly DM to yourself), or open this repo in Claude Code and ask it to help you set up (see [CLAUDE.md](CLAUDE.md)).
 
 ## Usage
 

@@ -18,35 +18,35 @@ Status key: `[ ]` todo, `[x]` done.
 
 ## Phase 1: Demo data and README figure
 
-- [ ] `demo.py` (or `collect.py --demo`): seeded fake `daily.csv`, about 12 weeks, 4 made-up projects (`web-app`, `data-pipeline`, `docs-site`, ...), 3 current models. No real data.
-- [ ] Generate `examples/report.html` from the demo data.
-- [ ] Capture `docs/img/portal.png` plus a dark-mode variant with the browser tool.
-- [ ] Embed the screenshot at the top of the README.
+- [x] `demo.py` (or `collect.py --demo`): seeded fake `daily.csv`, about 12 weeks, 4 made-up projects (`web-app`, `data-pipeline`, `docs-site`, ...), 3 current models. No real data.
+- [x] Generate `examples/report.html` from the demo data.
+- [x] Capture `docs/img/portal.png` plus a dark-mode variant with the browser tool.
+- [x] Embed the screenshot at the top of the README.
 - [ ] Optional: GitHub Pages link to the live demo report.
-- [ ] `make screenshots` target so images don't go stale.
+- [x] `./screenshots.sh` regenerates the demo report and screenshots (instead of a Makefile).
 
 ## Phase 2: Setup guide (`docs/SETUP.md`)
 
-- [ ] Prerequisites: Python 3, git; macOS (launchd), with notes for Linux (cron/systemd) and Windows (Task Scheduler/WSL).
-- [ ] Steps: clone, run `python3 collect.py`, open `report.html`, optionally `./install-schedule.sh`, how to uninstall.
-- [ ] Where transcripts live; `CLAUDE_CONFIG_DIR`.
-- [ ] The 30-day pruning caveat: the first run recovers only about 30 days, so run it early.
-- [ ] Optional tip: raise `cleanupPeriodDays` in Claude Code settings.
-- [ ] Troubleshooting: "No transcripts found", launchd not firing (`logs/update.log`), wrong week boundaries.
-- [ ] Link from the README.
+- [x] Prerequisites: Python 3, git; macOS (launchd), with notes for Linux (cron/systemd) and Windows (Task Scheduler/WSL).
+- [x] Steps: clone, run `python3 collect.py`, open `report.html`, optionally `./install-schedule.sh`, how to uninstall.
+- [x] Where transcripts live; `CLAUDE_CONFIG_DIR`.
+- [x] The 30-day pruning caveat: the first run recovers only about 30 days, so run it early.
+- [x] Optional tip: raise `cleanupPeriodDays` in Claude Code settings.
+- [x] Troubleshooting: "No transcripts found", launchd not firing (`logs/update.log`), wrong week boundaries.
+- [x] Link from the README.
+- [x] Root `CLAUDE.md` so Claude Code can walk a new user through setup.
 
-## Phase 3: Routines and Slack sync (`docs/ROUTINES.md`)
+## Phase 3: Slack summary (local, self-DM only)
 
-Design note: a Routine runs in the cloud and cannot read `~/.claude/projects` on a laptop.
+Decision: Pattern B (local only). A cloud Routine (Pattern A: push data to a private repo, Routine reads it) is a possible future alternative, documented but not built. Slack messages go **only** to the user's own DM; this is an explicit rule in `CLAUDE.md` and `docs/SLACK.md`.
 
-- [ ] Pattern A (recommended): launchd runs `update.sh` and pushes `data/` to GitHub. A weekly Routine (Thursday, shortly after the reset) clones the repo, reads the CSVs, and posts a summary to Slack via the Slack connector.
-- [ ] Pattern B (local only): a scheduled task on the machine or a Slack webhook called from `update.sh` (`slack-post.sh` using `curl`).
-- [ ] `summary.py`: deterministic Slack text (week-over-week change, top project, top model, cost) so the Routine only posts it.
-- [ ] Copy-pasteable Routine prompt.
-- [ ] Connector and channel setup steps; schedule recommendation.
-- [ ] Sample Slack message screenshot (synthetic data).
-- [ ] Failure modes: laptop asleep, stale data, missed runs.
-- [ ] Team version: each person pushes `data/<username>/daily.csv`; the Routine aggregates.
+- [x] `summary.py`: deterministic Slack text for the last completed week (`--no-projects`, `--link`).
+- [x] `docs/SLACK.md`: setup, copy-pasteable scheduled-task prompt, self-DM rule, comparison of delivery methods.
+- [x] Self-DM-only rule in `CLAUDE.md`.
+- [x] Sample message using synthetic data.
+- [ ] Migrate the maintainer's existing scheduled task `claude-usage-slack-report`: its paths still point at the old repo-root `report.html`/`WEEKLY.md`, and it fires at 14:45 (plus jitter), before the reset.
+- [ ] Optional: `summary.py` tests (week selection around the reset boundary).
+- [ ] Future: team rollup via a private shared data repo and a cloud Routine (must still respect the self-DM rule or get its own explicit rule).
 
 ## Phase 4: New figures and data
 
@@ -81,5 +81,4 @@ Design note: a Routine runs in the cloud and cannot read `~/.claude/projects` on
 
 - Git history on the remote still holds old data snapshots (real project names). Before sharing the repo, publish from a fresh repo or rewrite history (`git filter-repo --path data --path WEEKLY.md --path report.html --invert-paths`).
 - Tool-only repo or keep data? (decides Phase 0)
-- Pattern A or B for Slack? Which channel?
 - Is this for individual use per person, or a team rollup?
