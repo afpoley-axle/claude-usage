@@ -50,11 +50,11 @@ Decision: Pattern B (local only). A cloud Routine (Pattern A: push data to a pri
 
 ## Phase 4: New figures and data
 
-- [ ] Cache hit rate per week: `cache_read / (input + cache_write + cache_read)`.
-- [ ] Cost per message and output tokens per message trends.
+- [x] Cache hit rate per week: `cache_read / (input + cache_write + cache_read)` (line chart, axis spans at least 10 points so noise isn't exaggerated).
+- [x] Per-message trends: est. cost, output tokens, or total tokens per message (toggle).
 - [ ] Daily calendar heatmap, last 12 weeks.
 - [ ] Model mix over time (stacked share).
-- [ ] Burn-down: cumulative spend within the current allowance week, with a budget line.
+- [x] Burn-down: running total through the selected allowance week vs. the typical week and earlier weeks, with an optional budget line (`CLAUDE_USAGE_WEEKLY_BUDGET`, cost view).
 - [ ] Week-over-week delta and rolling 4-week average in `WEEKLY.md`.
 - [ ] Subscription value: API-equivalent cost vs. plan price (configurable).
 - [ ] Day-of-week and hour-of-day patterns (needs an hour key or a separate table).

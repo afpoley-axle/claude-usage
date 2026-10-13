@@ -58,3 +58,41 @@ class CostTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class WriteReportTest(unittest.TestCase):
+    """The HTML embeds its data as JSON; check the per-day data the burn-down chart reads."""
+
+    def render(self, daily, **kw):
+        import json
+        import re
+        import tempfile
+        from pathlib import Path
+
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "report.html"
+            report.write_report(daily, path, "2026-10-08", **kw)
+            return json.loads(re.search(r"const D = (\{.*\});\n", path.read_text()).group(1))
+
+    def daily(self):
+        row = lambda **kw: {**dict.fromkeys(report.METRICS, 0), **kw}
+        m = "claude-sonnet-5-5"
+        return {
+            ("2026-10-08", "2026-10-08", "a", m): row(messages=2, output=1000),
+            ("2026-10-08", "2026-10-01", "b", m): row(messages=1, output=500),  # same date, before the reset
+            ("2026-10-09", "2026-10-08", "a", m): row(messages=3, output=2000),
+        }
+
+    def test_days_split_by_week_and_sum_to_week_totals(self):
+        data = self.render(self.daily())
+        week = next(w for w in data["weeks"] if w["week"] == "2026-10-08")
+        self.assertEqual(sorted(week["days"]), ["2026-10-08", "2026-10-09"])
+        self.assertEqual(week["days"]["2026-10-08"]["messages"], 2)
+        self.assertEqual(sum(d["output"] for d in week["days"].values()),
+                         sum(m["output"] for m in week["models"].values()))
+        prev = next(w for w in data["weeks"] if w["week"] == "2026-10-01")
+        self.assertEqual(list(prev["days"]), ["2026-10-08"])
+
+    def test_budget_is_passed_through(self):
+        self.assertIsNone(self.render(self.daily())["budget"])
+        self.assertEqual(self.render(self.daily(), budget=150.0)["budget"], 150.0)

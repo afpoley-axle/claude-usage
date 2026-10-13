@@ -23,6 +23,7 @@ import collect  # noqa: E402
 from report import write_report  # noqa: E402
 
 LAST_DAY = date(2026, 10, 8)  # fixed so the example is reproducible
+BUDGET = 90  # example weekly budget in estimated dollars
 STAMP = "2026-10-08 18:00"  # fixed "generated" time so reruns produce identical files
 WEEKS = 12
 PROJECTS = {  # name -> (base share of activity, weekly drift)
@@ -61,11 +62,11 @@ def generate(rng):
                 msgs = int(rng.gauss(60, 15) * weight * intensity * mshare * 0.75)
                 if msgs < 1:
                     continue
-                cw = int(msgs * rng.uniform(6e3, 11e3))
+                cw = int(msgs * rng.uniform(6e3, 11e3) * (1.5 - 0.7 * progress))  # caching improves over time
                 rows[(day.isoformat(), week, project, model)] = {
                     "messages": msgs,
                     "input": int(msgs * rng.uniform(5, 60)),
-                    "output": int(msgs * rng.uniform(600, 1500)),
+                    "output": int(msgs * rng.uniform(600, 1500) * (0.8 + 0.5 * progress)),
                     "cache_write": cw,
                     "cache_write_1h": int(cw * rng.uniform(0.3, 0.9)) if model != MODELS[2] else 0,
                     "cache_read": int(msgs * rng.uniform(1.5e5, 3.5e5)),
@@ -79,7 +80,7 @@ def main():
                       [list(k) + [v[m] for m in collect.METRICS] for k, v in sorted(daily.items())])
     collect.build_report(daily, STAMP)
     write_report(daily, collect.REPORT_HTML, collect.week_start(
-        datetime.combine(LAST_DAY, time(12)).astimezone()), "Thu 15:00", STAMP)
+        datetime.combine(LAST_DAY, time(12)).astimezone()), "Thu 15:00", STAMP, BUDGET)
     print(f"{len(daily)} synthetic daily rows -> {EXAMPLES}")
 
 

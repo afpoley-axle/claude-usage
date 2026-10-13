@@ -33,7 +33,7 @@ Finish by summarizing what you set up and what the user still has to do themselv
 - `demo.py` and `screenshots.sh`: synthetic example in `examples/` and README screenshots in `docs/img/`. Regenerate with `./screenshots.sh` after changing the report (needs Chrome).
 - `summary.py`: prints the weekly Slack message text; it never sends anything.
 - `update.sh`, `install-schedule.sh`: scheduled runner and macOS launchd installer.
-- Config is environment variables only: `CLAUDE_USAGE_RESET_DAY`, `CLAUDE_USAGE_RESET_HOUR`, `CLAUDE_USAGE_DATA_DIR`, `CLAUDE_USAGE_PUSH`, `CLAUDE_CONFIG_DIR`.
+- Config is environment variables only: `CLAUDE_USAGE_RESET_DAY`, `CLAUDE_USAGE_RESET_HOUR`, `CLAUDE_USAGE_DATA_DIR`, `CLAUDE_USAGE_WEEKLY_BUDGET`, `CLAUDE_USAGE_PUSH`, `CLAUDE_CONFIG_DIR`.
 - Keep it stdlib-only with no external dependencies. Do not hand-edit generated files (`WEEKLY.md`, `report.html`, CSVs).
 - Changing the CSV schema is risky: rows are keyed on `date, week_start, project, model` and merged with max. Add columns carefully and keep old files loadable.
 - New model missing from `PRICES` means cost is counted as $0 (shown in the report footnote); add a line rather than changing the logic.
