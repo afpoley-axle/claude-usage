@@ -108,6 +108,14 @@ select{font:inherit;padding:4px 8px;border-radius:6px;border:1px solid var(--lin
 <div class="card"><h2 id="h4">Weekly total by model</h2><p class="note">Allowance weeks, <span class="reset"></span> to <span class="reset"></span> local. Models beyond the top four are grouped as Other.</p>
 <div class="legend" id="lg4"></div><div id="c4"></div>
 <details><summary>Table</summary><div id="t4"></div></details></div>
+<h3>Trends</h3>
+<div class="card"><h2>Cache hit rate</h2><p class="note">Share of input-side tokens served from the prompt cache: cache read / (input + cache write + cache read). Higher is cheaper and faster.</p>
+<div class="tiles" id="tiles5"></div><div id="c5"></div>
+<details><summary>Table</summary><div id="t5"></div></details></div>
+<div class="card"><h2 id="h6">Per message</h2><p class="note" id="n6"></p>
+<span class="seg" role="group" aria-label="Per-message measure"><button data-pm="cost" aria-pressed="true">Est. cost</button><button data-pm="output" aria-pressed="false">Output tokens</button><button data-pm="total" aria-pressed="false">Total tokens</button></span>
+<div class="tiles" id="tiles6" style="margin-top:12px"></div><div id="c6"></div>
+<details><summary>Table</summary><div id="t6"></div></details></div>
 <p class="foot" id="foot"></p>
 </main><div id="tip"></div>
 <script>
@@ -189,8 +197,41 @@ function perWeek(){const host=document.getElementById("c0");host.innerHTML="";
  document.getElementById("h0").textContent=M==="cost"?"Estimated cost per week":"Tokens per week";
  table("t0",["Week of","Messages","Total tokens"].concat(M==="cost"?["Est. cost"]:[]),D.weeks.map(w=>{const r=sum(Object.values(w.models));
   return[w.week+(w.current?" (in progress)":""),r.messages.toLocaleString(),fmtN(tot(r))].concat(M==="cost"?[fmt$(r.cost)]:[])}))}
+let PM="cost";
+const PMS={cost:{title:"Estimated cost per message",note:"API list-price equivalent divided by messages. Messages are individual model responses, so agentic sessions count many.",f:r=>r.messages?r.cost/r.messages:null,fmt:v=>v>=1?"$"+v.toFixed(2):"$"+v.toFixed(3),zero:true},
+ output:{title:"Output tokens per message",note:"Output tokens divided by messages: how much the model writes per response.",f:r=>r.messages?r.output/r.messages:null,fmt:fmtN,zero:true},
+ total:{title:"Total tokens per message",note:"Total tokens (input + output + cache write + cache read) divided by messages. Mostly cache reads, so it tracks how large the working context is.",f:r=>r.messages?tot(r)/r.messages:null,fmt:fmtN,zero:true}};
+// Line chart over weeks: pts=[{week,v,cur,tip}] oldest first; v may be null (no data)
+function lineChart(id,pts,f,o){const host=document.getElementById(id);host.innerHTML="";
+ const W=Math.max(host.clientWidth,300),L=62,T=24,B=40,H=240,n=pts.length,vs=pts.filter(p=>p.v!=null).map(p=>p.v);
+ if(!vs.length){host.textContent="No data yet.";return}
+ const mn=Math.min(...vs),mx=Math.max(...vs),span=(mx-mn)||Math.abs(mx)*.1||1;
+ let lo=o.zero?0:Math.max(0,mn-span*.4),hi=o.zero?mx*1.15:mx+span*.25;if(o.cap!=null)hi=Math.min(hi,o.cap);if(o.minSpan&&hi-lo<o.minSpan){hi=Math.min((hi+lo)/2+o.minSpan/2,o.cap??Infinity);lo=Math.max(0,hi-o.minSpan)}
+ if(hi<=lo)hi=lo+1;
+ const Y=v=>H-B-(H-B-T)*(v-lo)/(hi-lo),X=i=>L+(i+.5)*(W-L)/n;
+ const s=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img"},host);
+ for(let k=0;k<=4;k++){const v=lo+(hi-lo)*k/4;el("line",{x1:L,x2:W,y1:Y(v),y2:Y(v),stroke:"var(--grid)"},s);el("text",{x:L-6,y:Y(v)+4,"text-anchor":"end"},s).textContent=f(v)}
+ const idx=pts.map((p,i)=>p.v==null?-1:i).filter(i=>i>=0),done=idx.filter(i=>!pts[i].cur),curI=idx.filter(i=>pts[i].cur);
+ const path=ii=>ii.map((i,j)=>(j?"L":"M")+X(i)+","+Y(pts[i].v)).join("");
+ if(done.length>1)el("path",{d:path(done),fill:"none",stroke:"var(--accent)","stroke-width":2.5,"stroke-linejoin":"round"},s);
+ if(curI.length&&done.length)el("path",{d:path([done[done.length-1],curI[0]]),fill:"none",stroke:"var(--accent)","stroke-width":2.5,"stroke-dasharray":"4 4"},s);
+ pts.forEach((p,i)=>{if(i%Math.ceil(n/Math.floor(W/80))===0||i===n-1)el("text",{x:X(i),y:H-B+16,"text-anchor":"middle"},s).textContent=p.week.slice(5);
+  if(p.v==null)return;const c=el("circle",{cx:X(i),cy:Y(p.v),r:p.cur?5:4,fill:p.cur?"var(--card)":"var(--accent)",stroke:"var(--accent)","stroke-width":2},s);hover(c,p.tip)});
+ const li=idx[idx.length-1];el("text",{x:X(li),y:Y(pts[li].v)-10,"text-anchor":"middle",style:"fill:var(--ink)"},s).textContent=f(pts[li].v)}
+function trendTiles(id,pts,f){const done=pts.filter(p=>p.v!=null&&!p.cur),cur=pts.find(p=>p.cur&&p.v!=null),last=done[done.length-1];
+ document.getElementById(id).innerHTML=[["This week so far",cur?f(cur.v):"–"],[`Last week (${last?last.week.slice(5):"–"})`,last?f(last.v):"–"],
+  ["Average of completed weeks",done.length?f(done.reduce((a,p)=>a+p.v,0)/done.length):"–"]].map(([k,v])=>`<div class="tile"><span>${k}</span><b>${v}</b></div>`).join("")}
+function trends(){const wks=D.weeks.slice().reverse().map(w=>({w,r:sum(Object.values(w.models))}));
+ const hit=r=>{const d=r.input+r.cache_write+r.cache_read;return d?r.cache_read/d:null},pct=v=>(v*100).toFixed(1)+"%";
+ const hp=wks.map(({w,r})=>({week:w.week,cur:w.current,v:hit(r),tip:`<b>Week of ${w.week}${w.current?" (in progress)":""}</b>${hit(r)==null?"no data":pct(hit(r))+" cache hit<br>"+fmtN(r.cache_read)+" read · "+fmtN(r.cache_write)+" written · "+fmtN(r.input)+" uncached"}`}));
+ trendTiles("tiles5",hp,pct);lineChart("c5",hp,pct,{cap:1,minSpan:.1});
+ table("t5",["Week of","Cache hit rate","Cache read","Cache write","Input"],wks.slice().reverse().map(({w,r})=>[w.week+(w.current?" (in progress)":""),hit(r)==null?"–":pct(hit(r)),fmtN(r.cache_read),fmtN(r.cache_write),fmtN(r.input)]));
+ const c=PMS[PM];document.getElementById("h6").textContent=c.title;document.getElementById("n6").textContent=c.note;
+ const pp=wks.map(({w,r})=>({week:w.week,cur:w.current,v:c.f(r),tip:`<b>Week of ${w.week}${w.current?" (in progress)":""}</b>${c.f(r)==null?"no data":c.fmt(c.f(r))+" per message<br>"+r.messages.toLocaleString()+" messages"}`}));
+ trendTiles("tiles6",pp,c.fmt);lineChart("c6",pp,c.fmt,c);
+ table("t6",["Week of",c.title,"Messages"],wks.slice().reverse().map(({w,r})=>[w.week+(w.current?" (in progress)":""),c.f(r)==null?"–":c.fmt(c.f(r)),r.messages.toLocaleString()]))}
 function history(){
- HEAD=HEADS.concat(M==="cost"?["Est. cost"]:[]);perWeek();
+ HEAD=HEADS.concat(M==="cost"?["Est. cost"]:[]);perWeek();trends();
  columns("c3",D.projects,colP,byProject);columns("c4",D.models,colM,w=>w.models);
  document.getElementById("h3").textContent=`Weekly ${M==="cost"?"estimated cost":"total tokens"} by project`;
  document.getElementById("h4").textContent=`Weekly ${M==="cost"?"estimated cost":"total tokens"} by model`;
@@ -219,8 +260,10 @@ const FOOT="Estimated cost uses Anthropic API list prices per million tokens: in
 const foot=()=>document.getElementById("foot").textContent=M==="cost"?FOOT:"";
 const sel=document.getElementById("wk");sel.innerHTML=D.weeks.map(w=>`<option value="${w.week}">Week of ${w.week}${w.current?" (current)":""}</option>`).join("");
 sel.onchange=render;legend("lg3",D.projects,colP);legend("lg4",D.models,colM);
-document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{M=b.dataset.m;
- document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",x===b));history();render();foot()});
+document.querySelectorAll(".seg button[data-m]").forEach(b=>b.onclick=()=>{M=b.dataset.m;
+ document.querySelectorAll(".seg button[data-m]").forEach(x=>x.setAttribute("aria-pressed",x===b));history();render();foot()});
+document.querySelectorAll("[data-pm]").forEach(b=>b.onclick=()=>{PM=b.dataset.pm;
+ document.querySelectorAll("[data-pm]").forEach(x=>x.setAttribute("aria-pressed",x===b));trends()});
 history();render();foot();
 let rz;addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>{history();render()},150)});
 </script></body></html>

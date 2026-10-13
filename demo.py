@@ -61,11 +61,11 @@ def generate(rng):
                 msgs = int(rng.gauss(60, 15) * weight * intensity * mshare * 0.75)
                 if msgs < 1:
                     continue
-                cw = int(msgs * rng.uniform(6e3, 11e3))
+                cw = int(msgs * rng.uniform(6e3, 11e3) * (1.5 - 0.7 * progress))  # caching improves over time
                 rows[(day.isoformat(), week, project, model)] = {
                     "messages": msgs,
                     "input": int(msgs * rng.uniform(5, 60)),
-                    "output": int(msgs * rng.uniform(600, 1500)),
+                    "output": int(msgs * rng.uniform(600, 1500) * (0.8 + 0.5 * progress)),
                     "cache_write": cw,
                     "cache_write_1h": int(cw * rng.uniform(0.3, 0.9)) if model != MODELS[2] else 0,
                     "cache_read": int(msgs * rng.uniform(1.5e5, 3.5e5)),

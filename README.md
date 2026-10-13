@@ -11,7 +11,7 @@ _The report above is built from synthetic data, not real usage. Open [examples/r
 
 Outputs, written to `data/` (git-ignored):
 
-- `data/report.html`: charts by project and model for any week, plus weekly totals by project and by model, in estimated cost or tokens
+- `data/report.html`: charts by project and model for any week, weekly totals by project and by model (estimated cost or tokens), and weekly trends for cache hit rate and cost or tokens per message
 - `data/WEEKLY.md`: weekly totals, plus a by-model and by-project breakdown for the last two weeks
 - `data/daily.csv`: the durable record, one row per date × allowance week × project × model
 - `data/weekly.csv`: weekly rollup by model
