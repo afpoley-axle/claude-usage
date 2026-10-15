@@ -14,7 +14,7 @@ _The report above is built from synthetic data, not real usage. Open [examples/r
 The easiest way is to let Claude Code set it up for you:
 
 ```bash
-git clone https://github.com/afpoley-axle/claude-usage.git
+git clone https://github.com/afpoley/claude-usage.git
 cd claude-usage
 claude        # or open this folder in the Claude desktop app's Code tab
 ```
